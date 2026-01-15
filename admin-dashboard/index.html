@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Pali Ride Admin</title>
+</head>
+<body>
+<h2>Pali Ride Admin Dashboard</h2>
+<table border="1" cellpadding="8">
+<tr>
+<th>Pickup</th><th>Drop</th><th>Vehicle</th><th>Status</th>
+</tr>
+<tbody id="rows"></tbody>
+</table>
+
+<script>
+fetch("http://localhost:5000/api/admin/rides")
+.then(r=>r.json())
+.then(data=>{
+  const t=document.getElementById("rows");
+  data.forEach(r=>{
+    t.innerHTML+=`<tr>
+      <td>${r.pickup}</td>
+      <td>${r.drop}</td>
+      <td>${r.vehicleType}</td>
+      <td>${r.status}</td>
+    </tr>`;
+  });
+});
+</script>
+</body>
+</html>

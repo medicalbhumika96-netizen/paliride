@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+<h3>Customer Ride Booking</h3>
+<input id="p" placeholder="Pickup"><br><br>
+<input id="d" placeholder="Drop"><br><br>
+<button onclick="book()">Book Ride</button>
+
+<script>
+function book(){
+fetch("http://localhost:5000/api/ride/create",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    pickup:p.value,
+    drop:d.value,
+    vehicleType:"bike",
+    fare:50
+  })
+}).then(()=>alert("Ride Booked"));
+}
+</script>
+</body>
+</html>
