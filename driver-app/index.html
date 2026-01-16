@@ -9,116 +9,190 @@
 *{box-sizing:border-box;font-family:system-ui}
 body{
   margin:0;
-  background:#020617;
+  background:linear-gradient(180deg,#020617,#020617);
   color:#fff;
+}
+.app{
+  max-width:420px;
+  margin:auto;
+  padding:16px;
 }
 .header{
   text-align:center;
-  padding:16px;
-  font-size:20px;
+  font-size:22px;
   font-weight:600;
+  margin-bottom:16px;
 }
 .card{
   background:#111827;
-  margin:12px;
   padding:16px;
   border-radius:18px;
+  margin-bottom:14px;
 }
-.input{
-  width:calc(100% - 24px);
-  margin:12px;
-  padding:12px;
-  border-radius:12px;
+input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
   border:none;
+  margin-bottom:10px;
   font-size:15px;
 }
 .btn{
   width:100%;
-  padding:12px;
+  padding:14px;
   border:none;
   border-radius:14px;
   font-size:16px;
-  margin-top:8px;
-}
-.accept{ background:#22c55e; color:#000 }
-.complete{ background:#0a7cff; color:#fff }
-.load{ background:#334155; color:#fff }
-.payment{
   margin-top:6px;
-  font-size:14px;
-  opacity:0.9;
 }
+.primary{ background:#0a7cff; color:#fff }
+.green{ background:#22c55e; color:#000 }
+.red{ background:#ef4444; color:#fff }
+.ride{
+  border-top:1px solid #1f2937;
+  padding-top:10px;
+  margin-top:10px;
+}
+.status{
+  font-size:13px;
+  opacity:.8;
+}
+.hidden{ display:none }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚖 Pali Ride – Driver</div>
+<div class="app">
 
-<!-- DRIVER LOGIN (TEMPORARY) -->
-<input id="driverId" class="input" placeholder="Enter Driver ID">
-<button class="btn load" onclick="load()">Load My Rides</button>
+  <div class="header">🚖 Pali Ride – Driver</div>
 
-<div id="rides"></div>
+  <!-- LOGIN -->
+  <div id="loginBox" class="card">
+    <input id="name" placeholder="Driver name">
+    <input id="phone" placeholder="Mobile number">
+    <input id="pin" type="password" placeholder="4-digit PIN">
+    <button class="btn primary" onclick="login()">Login</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash" class="hidden">
+
+    <div class="card">
+      <div id="welcome"></div>
+      <button id="onBtn" class="btn green" onclick="setAvail(true)">🟢 Go Online</button>
+      <button id="offBtn" class="btn red hidden" onclick="setAvail(false)">🔴 Go Offline</button>
+    </div>
+
+    <div id="rides"></div>
+
+  </div>
+
+</div>
 
 <script>
-let currentDriverId = "";
+const API="https://paliride.onrender.com/api/driver";
+let driverId=null;
 
-function load(){
-  currentDriverId = document.getElementById("driverId").value.trim();
-  if(!currentDriverId){
-    return alert("Driver ID required");
-  }
+/* ===============================
+   INIT
+================================ */
+if(localStorage.getItem("driverId")){
+  driverId=localStorage.getItem("driverId");
+  showDash();
+}
 
-  fetch(`https://paliride.onrender.com/api/driver/${currentDriverId}/rides`)
-  .then(r=>r.json())
-  .then(data=>{
-    const box = document.getElementById("rides");
-    box.innerHTML = "";
-
-    if(data.length === 0){
-      box.innerHTML = `<div class="card">No active rides</div>`;
-      return;
-    }
-
-    data.forEach(r=>{
-      box.innerHTML += `
-      <div class="card">
-        <b>${r.pickup}</b> → ${r.drop}<br>
-        Fare: ₹${r.fare}<br>
-        <div class="payment">
-          Payment: <b>${r.paymentMode.toUpperCase()}</b>
-        </div>
-        Status: ${r.status}
-
-        ${r.status==="assigned" ?
-          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept Ride</button>`
-        : ""}
-
-        ${r.status==="accepted" ?
-          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete Ride</button>`
-        : ""}
-      </div>`;
-    });
+/* ===============================
+   LOGIN
+================================ */
+function login(){
+  fetch(API+"/login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      name:name.value,
+      phone:phone.value,
+      pin:pin.value
+    })
   })
-  .catch(()=>{
-    alert("Server error / invalid Driver ID");
+  .then(r=>r.json())
+  .then(d=>{
+    if(!d.driverId) return alert(d.message);
+    localStorage.setItem("driverId",d.driverId);
+    driverId=d.driverId;
+    showDash(d.name);
   });
 }
 
-function act(rideId, type){
-  fetch(`https://paliride.onrender.com/api/driver/${type}`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ rideId })
-  })
-  .then(()=>load());
+/* ===============================
+   DASHBOARD
+================================ */
+function showDash(n){
+  loginBox.classList.add("hidden");
+  dash.classList.remove("hidden");
+  welcome.innerHTML="Welcome, <b>"+(n||"Driver")+"</b>";
+  loadRides();
 }
 
-// auto refresh every 5 sec (only if driver loaded)
-setInterval(()=>{
-  if(currentDriverId) load();
-}, 5000);
+/* ===============================
+   AVAILABILITY
+================================ */
+function setAvail(v){
+  fetch(API+"/availability",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ driverId, isAvailable:v })
+  }).then(()=>{
+    onBtn.classList.toggle("hidden",v);
+    offBtn.classList.toggle("hidden",!v);
+  });
+}
+
+/* ===============================
+   LOAD RIDES
+================================ */
+function loadRides(){
+  fetch(API+"/my-rides",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ driverId })
+  })
+  .then(r=>r.json())
+  .then(list=>{
+    rides.innerHTML="";
+    if(!list.length){
+      rides.innerHTML="<div class='card'>No active rides</div>";
+    }
+    list.forEach(r=>{
+      rides.innerHTML+=`
+      <div class="card ride">
+        <b>${r.pickup}</b> → ${r.drop}<br>
+        Fare: ₹${r.fare}<br>
+        Payment: ${r.paymentMode?.toUpperCase() || "CASH"}<br>
+        <span class="status">Status: ${r.status}</span>
+
+        ${r.status==="assigned"?
+          `<button class="btn green" onclick="act('${r._id}','accept')">Accept Ride</button>`:""}
+
+        ${r.status==="accepted"?
+          `<button class="btn primary" onclick="act('${r._id}','complete')">Complete Ride</button>`:""}
+      </div>`;
+    });
+  });
+}
+
+/* ===============================
+   ACTIONS
+================================ */
+function act(id,type){
+  fetch(API+"/"+type,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ rideId:id, driverId })
+  }).then(()=>loadRides());
+}
+
+setInterval(loadRides,4000);
 </script>
 
 </body>
