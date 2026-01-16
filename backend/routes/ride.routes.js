@@ -1,56 +1,40 @@
-let vehicle="bike";
-let fare=40;
-let paymentMode="cash"; // ✅ NEW
+import express from "express";
+import Ride from "../models/Ride.js";
+import Driver from "../models/Driver.js";
 
-function setVehicle(v){
-  vehicle=v;
-  bike.classList.remove("active");
-  auto.classList.remove("active");
-  document.getElementById(v).classList.add("active");
-}
+const router = express.Router();
 
-function setFare(f){
-  fare=f;
-  document.querySelectorAll(".fares button").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-}
+/* ===============================
+   CREATE RIDE
+================================ */
+router.post("/create", async (req, res) => {
+  try {
+    const { pickup, drop, vehicleType, fare, paymentMode } = req.body;
 
-function setPay(p){
-  paymentMode=p;
-  cash.classList.remove("active");
-  upi.classList.remove("active");
-  document.getElementById(p).classList.add("active");
-}
-
-function bookRide(){
-  if(!pickup.value || !drop.value){
-    return alert("Pickup & Drop required");
-  }
-
-  fetch("https://paliride.onrender.com/api/ride/create",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      pickup:pickup.value,
-      drop:drop.value,
-      vehicleType:vehicle,
+    const ride = await Ride.create({
+      pickup,
+      drop,
+      vehicleType,
       fare,
-      paymentMode // ✅ SEND TO BACKEND
-    })
-  })
-  .then(()=>alert("🚖 Ride booked successfully"));
-}
+      paymentMode,
+      status: "requested"
+    });
 
-function wa(){
-  const msg=
-`Pali Ride Booking
-Pickup: ${pickup.value}
-Drop: ${drop.value}
-Vehicle: ${vehicle}
-Fare: ₹${fare}
-Payment: ${paymentMode.toUpperCase()}`;
+    // auto assign (optional)
+    const driver = await Driver.findOne({ isAvailable: true });
+    if (driver) {
+      ride.driver = driver._id;
+      ride.status = "assigned";
+      await ride.save();
 
-  window.open(
-    `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`
-  );
-}
+      driver.isAvailable = false;
+      await driver.save();
+    }
+
+    res.json({ rideId: ride._id, status: ride.status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+export default router;
