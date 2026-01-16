@@ -1,6 +1,8 @@
 import express from "express";
 import Ride from "../models/Ride.js";
 import Driver from "../models/Driver.js";
+import { calculateFare } from "../utils/fare.js";
+
 
 const router = express.Router();
 

@@ -165,21 +165,26 @@ function setPay(p){
 }
 
 function bookRide(){
+  const distanceKm = Number(
+    prompt("Approx distance in KM?", 3)
+  );
+
   fetch("https://paliride.onrender.com/api/ride/create",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      pickup:pickup.value,
-      drop:drop.value,
-      vehicleType:vehicle,
-      fare,
+      pickup: pickup.value,
+      drop: drop.value,
+      vehicleType: vehicle,
+      distanceKm,
       paymentMode
     })
   })
   .then(r=>r.json())
   .then(d=>{
-    rideId=d.rideId;
-    statusBox.innerHTML="🔍 Searching for driver...";
+    statusBox.innerHTML =
+      `💰 Fare: ₹${d.fare}<br>🔍 Searching for driver...`;
+    rideId = d.rideId;
     poll();
   });
 }
