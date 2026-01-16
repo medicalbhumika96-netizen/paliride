@@ -3,7 +3,6 @@ import Ride from "../models/Ride.js";
 import Driver from "../models/Driver.js";
 import { calculateFare } from "../utils/fare.js";
 
-
 const router = express.Router();
 
 /* ===============================
@@ -11,19 +10,34 @@ const router = express.Router();
 ================================ */
 router.post("/create", async (req, res) => {
   try {
-    const { pickup, drop, vehicleType, fare, paymentMode } = req.body;
+    const {
+      pickup,
+      drop,
+      vehicleType,
+      distanceKm,
+      paymentMode
+    } = req.body;
+
+    if (!pickup || !drop || !vehicleType || !distanceKm) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // ✅ BACKEND decides fare (SECURE)
+    const fare = calculateFare(vehicleType, distanceKm);
 
     const ride = await Ride.create({
       pickup,
       drop,
       vehicleType,
+      distanceKm,
       fare,
-      paymentMode,
+      paymentMode: paymentMode || "cash",
       status: "requested"
     });
 
-    // auto assign (optional)
+    // ✅ AUTO ASSIGN DRIVER (if available)
     const driver = await Driver.findOne({ isAvailable: true });
+
     if (driver) {
       ride.driver = driver._id;
       ride.status = "assigned";
@@ -33,14 +47,21 @@ router.post("/create", async (req, res) => {
       await driver.save();
     }
 
-    res.json({ rideId: ride._id, status: ride.status });
+    res.json({
+      rideId: ride._id,
+      status: ride.status,
+      fare
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Create ride error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-
-// get ride status (polling)
+/* ===============================
+   GET RIDE STATUS (POLLING)
+================================ */
 router.get("/status/:id", async (req, res) => {
   try {
     const ride = await Ride.findById(req.params.id)
@@ -52,15 +73,14 @@ router.get("/status/:id", async (req, res) => {
 
     res.json({
       status: ride.status,
-      driver: ride.driver || null,
+      fare: ride.fare,
       paymentMode: ride.paymentMode,
-      fare: ride.fare
+      driver: ride.driver || null
     });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-
 export default router;
-
