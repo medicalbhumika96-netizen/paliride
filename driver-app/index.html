@@ -46,6 +46,9 @@ body{
 </style>
 </head>
 <body>
+<audio id="beep">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
 
 <div class="header">
   🚖 Driver Panel
@@ -63,20 +66,7 @@ body{
 
 <script>
 let currentDriver="";
-
-function setAvail(){
-  currentDriver = driverId.value.trim();
-  if(!currentDriver) return alert("Driver ID required");
-
-  fetch("https://paliride.onrender.com/api/driver/availability",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      driverId: currentDriver,
-      isAvailable: avail.checked
-    })
-  });
-}
+let lastCount=0;
 
 function load(){
   if(!currentDriver) return;
@@ -85,38 +75,31 @@ function load(){
   .then(r=>r.json())
   .then(data=>{
     const box=document.getElementById("rides");
+
+    // 🔔 New ride notification
+    if(data.length > lastCount){
+      document.getElementById("beep").play();
+      alert("🔔 New Ride Assigned");
+    }
+    lastCount = data.length;
+
     box.innerHTML="";
     data.forEach(r=>{
       box.innerHTML+=`
       <div class="card">
         <div><b>${r.pickup}</b> → ${r.drop}</div>
-        <div class="badge">Fare: ₹${r.fare}</div>
-        <div class="badge">Status: ${r.status}</div>
+        <div>Fare: ₹${r.fare}</div>
+        <div>Status: ${r.status}</div>
 
         ${r.status==="assigned" ? 
-          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept Ride</button>` 
-          : ""
-        }
+          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept</button>`:""}
 
         ${r.status==="accepted" ? 
-          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete Ride</button>` 
-          : ""
-        }
+          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete</button>`:""}
       </div>`;
     });
   });
 }
-
-function act(id,type){
-  fetch(`https://paliride.onrender.com/api/driver/${type}`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ rideId:id })
-  }).then(()=>load());
-}
-
-// auto refresh every 6 sec
-setInterval(load,6000);
 </script>
 
 </body>
