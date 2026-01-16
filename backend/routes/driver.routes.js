@@ -6,11 +6,9 @@ import { broadcast } from "../realtime/events.js";
 
 const router = express.Router();
 
-/**
- * LOGIN / REGISTER
- * POST /api/driver/login
- * body: { name, phone, pin }
- */
+/* ===============================
+   LOGIN / REGISTER
+================================ */
 router.post("/login", async (req, res) => {
   const { name, phone, pin } = req.body;
   if (!phone || !pin) {
@@ -20,7 +18,6 @@ router.post("/login", async (req, res) => {
   let driver = await Driver.findOne({ phone });
 
   if (!driver) {
-    // auto-register
     driver = await Driver.create({
       name: name || "Driver",
       phone,
@@ -41,11 +38,9 @@ router.post("/login", async (req, res) => {
   });
 });
 
-/**
- * AVAILABILITY
- * POST /api/driver/availability
- * body: { driverId, isAvailable }
- */
+/* ===============================
+   AVAILABILITY
+================================ */
 router.post("/availability", async (req, res) => {
   const { driverId, isAvailable } = req.body;
 
@@ -57,11 +52,9 @@ router.post("/availability", async (req, res) => {
   res.json({ message: "Availability updated" });
 });
 
-/**
- * MY RIDES (NO driverId IN URL)
- * POST /api/driver/my-rides
- * body: { driverId }
- */
+/* ===============================
+   MY RIDES
+================================ */
 router.post("/my-rides", async (req, res) => {
   const { driverId } = req.body;
 
@@ -77,11 +70,9 @@ router.post("/my-rides", async (req, res) => {
   res.json(rides);
 });
 
-/**
- * ACCEPT RIDE
- * POST /api/driver/accept
- * body: { rideId, driverId }
- */
+/* ===============================
+   ACCEPT RIDE
+================================ */
 router.post("/accept", async (req, res) => {
   const { rideId, driverId } = req.body;
 
@@ -98,14 +89,19 @@ router.post("/accept", async (req, res) => {
   }
 
   await Ride.findByIdAndUpdate(rideId, { status: "accepted" });
+
+  // ✅ EMIT REALTIME EVENT (CORRECT PLACE)
+  broadcast("ride_accepted", {
+    rideId: rideId,
+    driverId: driverId
+  });
+
   res.json({ message: "Ride accepted" });
 });
 
-/**
- * COMPLETE RIDE
- * POST /api/driver/complete
- * body: { rideId }
- */
+/* ===============================
+   COMPLETE RIDE
+================================ */
 router.post("/complete", async (req, res) => {
   const { rideId } = req.body;
 
@@ -119,12 +115,12 @@ router.post("/complete", async (req, res) => {
   await Ride.findByIdAndUpdate(rideId, { status: "completed" });
   await Driver.findByIdAndUpdate(ride.driver, { isAvailable: true });
 
+  // ✅ EMIT REALTIME EVENT
+  broadcast("ride_completed", {
+    rideId: rideId
+  });
+
   res.json({ message: "Ride completed" });
 });
-broadcast("ride_accepted", {
-  rideId,
-  driverId
-});
-
 
 export default router;
