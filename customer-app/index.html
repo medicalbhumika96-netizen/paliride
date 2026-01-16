@@ -188,6 +188,22 @@ Vehicle: ${vehicle}
 Payment: ${paymentMode}`;
   window.open(`https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`);
 }
+const es = new EventSource("https://paliride.onrender.com/api/realtime/stream");
+
+es.addEventListener("ride_accepted", (e) => {
+  const d = JSON.parse(e.data);
+  if (d.rideId === rideId) {
+    statusBox.innerHTML += "<br>✅ Driver accepted";
+  }
+});
+
+es.addEventListener("ride_completed", (e) => {
+  const d = JSON.parse(e.data);
+  if (d.rideId === rideId) {
+    statusBox.innerHTML += "<br>🎉 Ride completed";
+  }
+});
+
 </script>
 
 </body>

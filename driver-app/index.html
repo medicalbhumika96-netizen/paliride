@@ -193,6 +193,17 @@ function act(id,type){
 }
 
 setInterval(loadRides,4000);
+
+const es = new EventSource("https://paliride.onrender.com/api/realtime/stream");
+
+es.addEventListener("ride_assigned", (e) => {
+  const data = JSON.parse(e.data);
+  if (data.driverId === driverId) {
+    alert("🔔 New Ride Assigned");
+    loadRides();
+  }
+});
+
 </script>
 
 </body>

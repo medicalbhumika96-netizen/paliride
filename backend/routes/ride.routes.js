@@ -64,11 +64,17 @@ router.post("/create", async (req, res) => {
 ================================ */
 router.get("/status/:id", async (req, res) => {
   try {
-    const ride = await Ride.findById(req.params.id)
+    const rideId = req.params.id;
+
+    if (!rideId || rideId.length !== 24) {
+      return res.json({ status: "searching" });
+    }
+
+    const ride = await Ride.findById(rideId)
       .populate("driver", "name phone");
 
     if (!ride) {
-      return res.status(404).json({ message: "Ride not found" });
+      return res.json({ status: "searching" });
     }
 
     res.json({
@@ -79,7 +85,8 @@ router.get("/status/:id", async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    // 🔕 NEVER BREAK CUSTOMER UI
+    res.json({ status: "searching" });
   }
 });
 

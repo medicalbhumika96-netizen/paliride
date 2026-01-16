@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Driver from "../models/Driver.js";
 import Ride from "../models/Ride.js";
+import { broadcast } from "../realtime/events.js";
 
 const router = express.Router();
 
@@ -120,5 +121,10 @@ router.post("/complete", async (req, res) => {
 
   res.json({ message: "Ride completed" });
 });
+broadcast("ride_accepted", {
+  rideId,
+  driverId
+});
+
 
 export default router;
