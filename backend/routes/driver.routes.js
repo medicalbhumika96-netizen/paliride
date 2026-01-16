@@ -1,4 +1,4 @@
-=import express from "express";
+import express from "express";
 import mongoose from "mongoose";
 import Ride from "../models/Ride.js";
 import Driver from "../models/Driver.js";
