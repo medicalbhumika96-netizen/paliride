@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
 
 const rideSchema = new mongoose.Schema({
-  pickup: String,
-  drop: String,
-  vehicleType: { type:String, enum:["bike","auto"] },
-  fare: Number, // 🔒 locked at creation
-  status: {
-    type:String,
-    enum:["requested","assigned","accepted","completed","cancelled"],
-    default:"requested"
-  },
-  driver: { type: mongoose.Schema.Types.ObjectId, ref:"Driver" }
+  pickup:String,
+  drop:String,
+  vehicleType:String,
+  fare:Number,
+  status:String,
+  driver:{ type:mongoose.Schema.Types.ObjectId, ref:"Driver" },
+
+  paymentMode:{ type:String, enum:["cash","upi"], default:"cash" },
+  paymentStatus:{ type:String, enum:["pending","paid"], default:"pending" }
+
 },{ timestamps:true });
+
 
 export default mongoose.model("Ride", rideSchema);

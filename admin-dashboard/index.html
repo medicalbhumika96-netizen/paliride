@@ -1,137 +1,126 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Pali Ride – Admin</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<title>Pali Ride – Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body{
-      font-family: Arial;
-      background:#f4f6f8;
-      margin:0;
-    }
-    h3{
-      text-align:center;
-      margin:16px 0;
-    }
-    .card{
-      background:#fff;
-      margin:12px;
-      padding:14px;
-      border-radius:10px;
-      box-shadow:0 3px 8px rgba(0,0,0,.1);
-    }
-    input, select{
-      width:100%;
-      padding:10px;
-      margin-bottom:8px;
-      border:1px solid #ccc;
-      border-radius:6px;
-    }
-    .btn{
-      width:100%;
-      padding:10px;
-      border:none;
-      border-radius:6px;
-      background:#0a7cff;
-      color:#fff;
-      font-size:15px;
-      cursor:pointer;
-    }
-    .btn.small{
-      width:auto;
-      padding:6px 12px;
-      margin-top:6px;
-    }
-    .status{
-      font-weight:bold;
-      margin:6px 0;
-    }
-  </style>
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{
+  margin:0;
+  background:#0f172a;
+  color:#fff;
+}
+.header{
+  padding:16px;
+  text-align:center;
+  font-size:20px;
+  font-weight:600;
+}
+.card{
+  background:#1e293b;
+  margin:12px;
+  padding:14px;
+  border-radius:16px;
+}
+input,select{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-bottom:8px;
+}
+.btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#0a7cff;
+  color:#fff;
+  font-size:15px;
+}
+.small{
+  padding:8px 12px;
+  margin-top:8px;
+}
+.ride{
+  margin-bottom:10px;
+}
+.status{
+  font-size:13px;
+  opacity:.85;
+}
+</style>
 </head>
 
 <body>
 
-<h3>🛠 Admin – Pali Ride</h3>
+<div class="header">🛠 Pali Ride – Admin</div>
 
-<!-- CREATE RIDE (WHATSAPP / MANUAL) -->
+<!-- CREATE RIDE -->
 <div class="card">
-  <h4>➕ Create Ride (WhatsApp)</h4>
+  <h4>Create Ride (WhatsApp / Manual)</h4>
   <input id="ap" placeholder="Pickup">
   <input id="ad" placeholder="Drop">
-
   <select id="av">
     <option value="bike">Bike</option>
     <option value="auto">Auto</option>
   </select>
-
   <input id="af" type="number" placeholder="Fare">
-  <button class="btn" onclick="adminCreate()">Create Ride</button>
+  <button class="btn" onclick="create()">Create Ride</button>
 </div>
+<div>Payment: ${r.paymentMode} (${r.paymentStatus})</div>
 
-<!-- LIVE RIDES -->
+<!-- RIDES -->
 <div id="list"></div>
 
 <script>
 async function load(){
-  const rides = await fetch("https://paliride.onrender.com/api/admin/rides").then(r=>r.json());
-  const drivers = await fetch("https://paliride.onrender.com/api/admin/drivers").then(r=>r.json());
-
-  const box = document.getElementById("list");
+  const rides=await fetch("https://paliride.onrender.com/api/admin/rides").then(r=>r.json());
+  const drivers=await fetch("https://paliride.onrender.com/api/admin/drivers").then(r=>r.json());
+  const box=document.getElementById("list");
   box.innerHTML="";
 
   rides.forEach(r=>{
     box.innerHTML+=`
-    <div class="card">
-      <div><b>${r.pickup}</b> → ${r.drop}</div>
-      <div>Fare: ₹${r.fare}</div>
+    <div class="card ride">
+      <b>${r.pickup}</b> → ${r.drop}<br>
+      ₹${r.fare} • ${r.vehicleType}
       <div class="status">Status: ${r.status}</div>
 
-      ${r.status==="requested" ? `
+      ${r.status==="requested"?`
         <select id="d${r._id}">
           ${drivers.map(d=>`<option value="${d._id}">${d.name}</option>`)}
         </select>
         <button class="btn small" onclick="assign('${r._id}')">Assign Driver</button>
-      ` : ""}
+      `:""}
     </div>`;
   });
 }
 
-function assign(rideId){
-  const driverId=document.getElementById("d"+rideId).value;
+function assign(id){
   fetch("https://paliride.onrender.com/api/admin/assign",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ rideId, driverId })
-  }).then(()=>{
-    alert("🚖 Driver Assigned");
-    load();
-  });
+    body:JSON.stringify({
+      rideId:id,
+      driverId:document.getElementById("d"+id).value
+    })
+  }).then(()=>load());
 }
 
-function adminCreate(){
-  const pickup = ap.value.trim();
-  const drop = ad.value.trim();
-  const vehicleType = av.value;
-  const fare = Number(af.value);
-
-  if(!pickup || !drop || !fare){
-    return alert("All fields required");
-  }
-
+function create(){
   fetch("https://paliride.onrender.com/api/ride/create",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ pickup, drop, vehicleType, fare })
-  })
-  .then(r=>r.json())
-  .then(()=>{
-    ap.value=""; ad.value=""; af.value="";
-    alert("✅ Ride created from WhatsApp");
-    load();
-  })
-  .catch(()=>alert("Error creating ride"));
+    body:JSON.stringify({
+      pickup:ap.value,
+      drop:ad.value,
+      vehicleType:av.value,
+      fare:Number(af.value)
+    })
+  }).then(()=>{ ap.value="";ad.value="";af.value="";load(); });
 }
 
 load();

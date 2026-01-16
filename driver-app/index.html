@@ -3,103 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <title>Pali Ride – Driver</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+*{box-sizing:border-box;font-family:system-ui}
 body{
-  font-family:Arial;
-  background:#f4f6f8;
   margin:0;
+  background:#020617;
+  color:#fff;
 }
 .header{
-  background:#0a7cff;
-  color:#fff;
-  padding:12px;
   text-align:center;
+  padding:16px;
+  font-size:20px;
+  font-weight:600;
 }
 .card{
-  background:#fff;
+  background:#111827;
   margin:12px;
-  padding:14px;
-  border-radius:10px;
-  box-shadow:0 3px 8px rgba(0,0,0,.1);
+  padding:16px;
+  border-radius:18px;
 }
 .btn{
   width:100%;
-  padding:10px;
-  margin-top:8px;
+  padding:12px;
   border:none;
-  border-radius:6px;
-  font-size:15px;
+  border-radius:14px;
+  font-size:16px;
+  margin-top:8px;
 }
-.accept{background:#28a745;color:#fff}
-.complete{background:#17a2b8;color:#fff}
-.toggle{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.badge{
-  font-weight:bold;
-  margin-top:6px;
-}
+.accept{ background:#22c55e; color:#000 }
+.complete{ background:#0a7cff }
 </style>
 </head>
+
 <body>
-<audio id="beep">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-</audio>
 
-<div class="header">
-  🚖 Driver Panel
-</div>
-
-<div class="card">
-  <input id="driverId" placeholder="Enter Driver ID" style="width:100%;padding:10px">
-  <div class="toggle">
-    <span>Status:</span>
-    <input type="checkbox" id="avail" onchange="setAvail()">
-  </div>
-</div>
+<div class="header">🚖 Pali Ride – Driver</div>
+<div>Payment: <b>${r.paymentMode.toUpperCase()}</b></div>
 
 <div id="rides"></div>
 
 <script>
-let currentDriver="";
-let lastCount=0;
+const driverId="DRIVER_ID_HERE"; // future login
 
 function load(){
-  if(!currentDriver) return;
-
-  fetch(`https://paliride.onrender.com/api/driver/${currentDriver}/rides`)
+  fetch(`https://paliride.onrender.com/api/driver/${driverId}/rides`)
   .then(r=>r.json())
   .then(data=>{
     const box=document.getElementById("rides");
-
-    // 🔔 New ride notification
-    if(data.length > lastCount){
-      document.getElementById("beep").play();
-      alert("🔔 New Ride Assigned");
-    }
-    lastCount = data.length;
-
     box.innerHTML="";
     data.forEach(r=>{
       box.innerHTML+=`
       <div class="card">
-        <div><b>${r.pickup}</b> → ${r.drop}</div>
-        <div>Fare: ₹${r.fare}</div>
-        <div>Status: ${r.status}</div>
+        <b>${r.pickup}</b> → ${r.drop}<br>
+        Fare: ₹${r.fare}<br>
+        Status: ${r.status}
 
-        ${r.status==="assigned" ? 
-          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept</button>`:""}
+        ${r.status==="assigned"?
+          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept Ride</button>`:""}
 
-        ${r.status==="accepted" ? 
-          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete</button>`:""}
+        ${r.status==="accepted"?
+          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete Ride</button>`:""}
       </div>`;
     });
   });
 }
+
+function act(id,type){
+  fetch(`https://paliride.onrender.com/api/driver/${type}`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ rideId:id })
+  }).then(()=>load());
+}
+
+setInterval(load,4000);
+load();
 </script>
 
 </body>

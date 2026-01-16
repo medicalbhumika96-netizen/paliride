@@ -1,163 +1,201 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Pali Ride – Customer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f6f8;
-      margin: 0
-    }
+<meta charset="UTF-8">
+<title>Pali Ride</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    .card {
-      max-width: 380px;
-      margin: 60px auto;
-      background: #fff;
-      padding: 18px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .1)
-    }
-
-    h3 {
-      text-align: center;
-      margin: 10px 0
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px
-    }
-
-    .fares {
-      display: flex;
-      gap: 8px
-    }
-
-    .fares button {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #0a7cff;
-      border-radius: 6px;
-      background: #fff
-    }
-
-    .fares button.active {
-      background: #0a7cff;
-      color: #fff
-    }
-
-    button.main {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      background: #0a7cff;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px
-    }
-
-    small {
-      color: #555
-    }
-  </style>
+<style>
+*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont}
+body{
+  margin:0;
+  height:100vh;
+  background:linear-gradient(135deg,#0a7cff,#4f46e5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.app{
+  width:100%;
+  max-width:380px;
+  background:rgba(255,255,255,.96);
+  border-radius:24px;
+  padding:22px;
+  box-shadow:0 20px 40px rgba(0,0,0,.25);
+}
+.header{
+  text-align:center;
+  margin-bottom:16px;
+}
+.header h2{
+  margin:0;
+  font-size:22px;
+}
+.header span{
+  font-size:13px;
+  color:#555;
+}
+.input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ddd;
+  margin-bottom:12px;
+  font-size:15px;
+}
+.vehicle{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+}
+.vehicle button{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:2px solid #ddd;
+  background:#fff;
+  font-size:15px;
+}
+.vehicle button.active{
+  border-color:#0a7cff;
+  background:#eef5ff;
+}
+.fares{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+.fares button{
+  flex:1 1 30%;
+  padding:10px;
+  border-radius:12px;
+  border:2px solid #ddd;
+  background:#fff;
+  font-weight:bold;
+}
+.fares button.active{
+  background:#0a7cff;
+  color:#fff;
+  border-color:#0a7cff;
+}
+.primary{
+  width:100%;
+  padding:14px;
+  border-radius:18px;
+  border:none;
+  font-size:16px;
+  background:#0a7cff;
+  color:#fff;
+  margin-bottom:10px;
+}
+.whatsapp{
+  background:#22c55e;
+}
+.footer{
+  text-align:center;
+  font-size:12px;
+  color:#666;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="card">
-    <h3>🚕 Pali Ride</h3>
-
-    <input id="p" placeholder="Pickup location">
-    <input id="d" placeholder="Drop location">
-
-    <select id="v" onchange="setFares()">
-      <option value="bike">Bike</option>
-      <option value="auto">Auto</option>
-    </select>
-
-    <small>Select fare</small>
-    <div class="fares" id="fareBtns"></div>
-
-    <button class="main" onclick="book()">Book Ride</button>
+<div class="app">
+  <div class="header">
+    <h2>🚕 Pali Ride</h2>
+    <span>Pali ka apna local ride</span>
   </div>
-<button class="main" onclick="book()">Book Ride</button>
-<button class="main" style="background:#25D366;margin-top:8px" onclick="wa()">📲 Book via WhatsApp</button>
 
-  <script>
-    let selectedFare = 0;
+  <input id="pickup" class="input" placeholder="Pickup location">
+  <input id="drop" class="input" placeholder="Drop location">
 
-    const FARES = {
-      bike: [40, 60, 80, 100, 120],
-      auto: [60, 90, 120, 150, 180]
-    };
+  <div class="vehicle">
+    <button id="bike" class="active" onclick="setVehicle('bike')">🏍 Bike</button>
+    <button id="auto" onclick="setVehicle('auto')">🛺 Auto</button>
+  </div>
 
-    function setFares() {
-      const v = document.getElementById("v").value;
-      const box = document.getElementById("fareBtns");
-      box.innerHTML = "";
-      selectedFare = 0;
-      FARES[v].forEach(f => {
-        const b = document.createElement("button");
-        b.innerText = "₹" + f;
-        b.onclick = () => selectFare(b, f);
-        box.appendChild(b);
-      });
-    }
-    function selectFare(btn, f) {
-      [...document.querySelectorAll(".fares button")].forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedFare = f;
-    }
-    setFares();
+  <div class="fares">
+    <button onclick="setFare(40)">₹40</button>
+    <button onclick="setFare(60)">₹60</button>
+    <button onclick="setFare(80)">₹80</button>
+    <button onclick="setFare(100)">₹100</button>
+    <button onclick="setFare(120)">₹120</button>
+  </div>
+  <div class="vehicle">
+  <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
+  <button id="upi" onclick="setPay('upi')">📲 UPI</button>
+</div>
 
-    function book() {
-      const pickup = p.value.trim(), drop = d.value.trim(), vehicleType = v.value;
-      if (!pickup || !drop || !selectedFare) {
-        return alert("Pickup, Drop aur Fare select karo");
-      }
-      fetch("https://paliride.onrender.com/api/ride/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pickup, drop, vehicleType, fare: selectedFare })
-      })
-        .then(r => r.json())
-        .then(res => {
-          if (res.message !== "Ride created") throw new Error();
-          alert("Ride Booked Successfully");
-          p.value = ""; d.value = ""; setFares();
-        })
-        .catch(e => alert(e.message || "Server issue"));
-    }
-    function wa(){
-  const pickup = p.value.trim();
-  const drop = d.value.trim();
-  const vehicleType = v.value;
-  if(!pickup || !drop || !selectedFare){
-    return alert("Pickup, Drop aur Fare select karo");
+
+  <button class="primary" onclick="bookRide()">Confirm Ride</button>
+  <button class="primary whatsapp" onclick="wa()">📲 Book via WhatsApp</button>
+
+  <div class="footer">
+    Trusted local drivers • Fixed fare • No surge
+  </div>
+</div>
+
+<script>
+let vehicle="bike";
+let fare=40;
+let paymentMode="cash"; // ✅ NEW
+
+function setVehicle(v){
+  vehicle=v;
+  bike.classList.remove("active");
+  auto.classList.remove("active");
+  document.getElementById(v).classList.add("active");
+}
+
+function setFare(f){
+  fare=f;
+  document.querySelectorAll(".fares button").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+}
+
+function setPay(p){
+  paymentMode=p;
+  cash.classList.remove("active");
+  upi.classList.remove("active");
+  document.getElementById(p).classList.add("active");
+}
+
+function bookRide(){
+  if(!pickup.value || !drop.value){
+    return alert("Pickup & Drop required");
   }
 
-  const msg =
-`Hello Pali Ride 👋
-Pickup: ${pickup}
-Drop: ${drop}
-Vehicle: ${vehicleType}
-Fare: ₹${selectedFare}`;
-
-  // 👉 Admin WhatsApp number (country code ke sath)
-  const ADMIN_WA = "91XXXXXXXXXX"; // ← yahan apna number
-  const url = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
+  fetch("https://paliride.onrender.com/api/ride/create",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      pickup:pickup.value,
+      drop:drop.value,
+      vehicleType:vehicle,
+      fare,
+      paymentMode // ✅ SEND TO BACKEND
+    })
+  })
+  .then(()=>alert("🚖 Ride booked successfully"));
 }
-  </script>
+
+function wa(){
+  const msg=
+`Pali Ride Booking
+Pickup: ${pickup.value}
+Drop: ${drop.value}
+Vehicle: ${vehicle}
+Fare: ₹${fare}
+Payment: ${paymentMode.toUpperCase()}`;
+
+  window.open(
+    `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`
+  );
+}
+</script>
+
 
 </body>
-
 </html>
