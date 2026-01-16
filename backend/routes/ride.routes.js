@@ -39,4 +39,28 @@ router.post("/create", async (req, res) => {
   }
 });
 
+
+// get ride status (polling)
+router.get("/status/:id", async (req, res) => {
+  try {
+    const ride = await Ride.findById(req.params.id)
+      .populate("driver", "name phone");
+
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    res.json({
+      status: ride.status,
+      driver: ride.driver || null,
+      paymentMode: ride.paymentMode,
+      fare: ride.fare
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 export default router;
+

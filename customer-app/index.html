@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont}
+*{box-sizing:border-box;font-family:system-ui}
 body{
   margin:0;
   height:100vh;
@@ -18,23 +18,15 @@ body{
 .app{
   width:100%;
   max-width:380px;
-  background:rgba(255,255,255,.96);
+  background:#fff;
   border-radius:24px;
   padding:22px;
   box-shadow:0 20px 40px rgba(0,0,0,.25);
 }
-.header{
-  text-align:center;
-  margin-bottom:16px;
-}
-.header h2{
-  margin:0;
-  font-size:22px;
-}
-.header span{
-  font-size:13px;
-  color:#555;
-}
+.header{text-align:center;margin-bottom:16px}
+.header h2{margin:0;font-size:22px}
+.header span{font-size:13px;color:#555}
+
 .input{
   width:100%;
   padding:14px;
@@ -43,42 +35,21 @@ body{
   margin-bottom:12px;
   font-size:15px;
 }
-.vehicle{
-  display:flex;
-  gap:10px;
-  margin-bottom:14px;
-}
-.vehicle button{
+
+.vehicle,.fares{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.vehicle button,.fares button{
   flex:1;
   padding:12px;
   border-radius:14px;
   border:2px solid #ddd;
   background:#fff;
-  font-size:15px;
+  font-weight:bold;
 }
-.vehicle button.active{
+button.active{
   border-color:#0a7cff;
   background:#eef5ff;
 }
-.fares{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:16px;
-}
-.fares button{
-  flex:1 1 30%;
-  padding:10px;
-  border-radius:12px;
-  border:2px solid #ddd;
-  background:#fff;
-  font-weight:bold;
-}
-.fares button.active{
-  background:#0a7cff;
-  color:#fff;
-  border-color:#0a7cff;
-}
+
 .primary{
   width:100%;
   padding:14px;
@@ -89,13 +60,14 @@ body{
   color:#fff;
   margin-bottom:10px;
 }
-.whatsapp{
-  background:#22c55e;
-}
-.footer{
-  text-align:center;
-  font-size:12px;
-  color:#666;
+.whatsapp{background:#22c55e}
+
+#statusBox{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:#f3f4f6;
+  font-size:14px;
 }
 </style>
 </head>
@@ -123,26 +95,24 @@ body{
     <button onclick="setFare(100)">₹100</button>
     <button onclick="setFare(120)">₹120</button>
   </div>
-  <div class="vehicle">
-  <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
-  <button id="upi" onclick="setPay('upi')">📲 UPI</button>
-</div>
 
+  <div class="vehicle">
+    <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
+    <button id="upi" onclick="setPay('upi')">📲 UPI</button>
+  </div>
 
   <button class="primary" onclick="bookRide()">Confirm Ride</button>
   <button class="primary whatsapp" onclick="wa()">📲 Book via WhatsApp</button>
 
-  <div class="footer">
-    Trusted local drivers • Fixed fare • No surge
-  </div>
+  <div id="statusBox" style="display:none"></div>
 </div>
-<div id="statusBox"></div>
 
 <script>
 let vehicle="bike";
 let fare=40;
 let paymentMode="cash";
 let rideId=null;
+let pollTimer=null;
 
 function setVehicle(v){
   vehicle=v;
@@ -150,13 +120,11 @@ function setVehicle(v){
   auto.classList.remove("active");
   document.getElementById(v).classList.add("active");
 }
-
 function setFare(f){
   fare=f;
   document.querySelectorAll(".fares button").forEach(b=>b.classList.remove("active"));
   event.target.classList.add("active");
 }
-
 function setPay(p){
   paymentMode=p;
   cash.classList.remove("active");
@@ -165,9 +133,12 @@ function setPay(p){
 }
 
 function bookRide(){
-  const distanceKm = Number(
-    prompt("Approx distance in KM?", 3)
-  );
+  if(!pickup.value || !drop.value){
+    return alert("Pickup & Drop required");
+  }
+
+  const distanceKm = Number(prompt("Approx distance (KM)?", 3));
+  if(!distanceKm || distanceKm<=0) return;
 
   fetch("https://paliride.onrender.com/api/ride/create",{
     method:"POST",
@@ -182,22 +153,40 @@ function bookRide(){
   })
   .then(r=>r.json())
   .then(d=>{
-    statusBox.innerHTML =
-      `💰 Fare: ₹${d.fare}<br>🔍 Searching for driver...`;
-    rideId = d.rideId;
-    poll();
+    rideId=d.rideId;
+    statusBox.style.display="block";
+    statusBox.innerHTML="🔍 Searching for driver...";
+    pollTimer=setInterval(poll,4000);
   });
 }
 
 function poll(){
-  const t=setInterval(()=>{
-    fetch("https://paliride.onrender.com/api/ride/status/"+rideId)
-    .then(r=>r.json())
+  if(!rideId) return;
+  fetch(`https://paliride.onrender.com/api/ride/status/${rideId}`)
+    .then(r=>r.ok?r.json():null)
     .then(d=>{
-      statusBox.innerHTML="🚖 Status: "+d.status;
-      if(d.status==="completed") clearInterval(t);
-    });
-  },3000);
+      if(!d) return;
+      statusBox.innerHTML=
+        `Status: <b>${d.status}</b><br>
+         Fare: ₹${d.fare}<br>
+         Payment: ${d.paymentMode}`;
+
+      if(d.status==="completed"){
+        statusBox.innerHTML+="<br>✅ Ride completed";
+        clearInterval(pollTimer);
+      }
+    })
+    .catch(()=>{});
+}
+
+function wa(){
+  const msg=
+`Pali Ride Booking
+Pickup: ${pickup.value}
+Drop: ${drop.value}
+Vehicle: ${vehicle}
+Payment: ${paymentMode}`;
+  window.open(`https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`);
 }
 </script>
 
