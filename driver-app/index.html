@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Pali Ride – Driver</title>
@@ -24,6 +24,14 @@ body{
   padding:16px;
   border-radius:18px;
 }
+.input{
+  width:calc(100% - 24px);
+  margin:12px;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  font-size:15px;
+}
 .btn{
   width:100%;
   padding:12px;
@@ -33,53 +41,84 @@ body{
   margin-top:8px;
 }
 .accept{ background:#22c55e; color:#000 }
-.complete{ background:#0a7cff }
+.complete{ background:#0a7cff; color:#fff }
+.load{ background:#334155; color:#fff }
+.payment{
+  margin-top:6px;
+  font-size:14px;
+  opacity:0.9;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">🚖 Pali Ride – Driver</div>
-<div>Payment: <b>${r.paymentMode.toUpperCase()}</b></div>
+
+<!-- DRIVER LOGIN (TEMPORARY) -->
+<input id="driverId" class="input" placeholder="Enter Driver ID">
+<button class="btn load" onclick="load()">Load My Rides</button>
 
 <div id="rides"></div>
 
 <script>
-const driverId="DRIVER_ID_HERE"; // future login
+let currentDriverId = "";
 
 function load(){
-  fetch(`https://paliride.onrender.com/api/driver/${driverId}/rides`)
+  currentDriverId = document.getElementById("driverId").value.trim();
+  if(!currentDriverId){
+    return alert("Driver ID required");
+  }
+
+  fetch(`https://paliride.onrender.com/api/driver/${currentDriverId}/rides`)
   .then(r=>r.json())
   .then(data=>{
-    const box=document.getElementById("rides");
-    box.innerHTML="";
+    const box = document.getElementById("rides");
+    box.innerHTML = "";
+
+    if(data.length === 0){
+      box.innerHTML = `<div class="card">No active rides</div>`;
+      return;
+    }
+
     data.forEach(r=>{
-      box.innerHTML+=`
+      box.innerHTML += `
       <div class="card">
         <b>${r.pickup}</b> → ${r.drop}<br>
         Fare: ₹${r.fare}<br>
+        <div class="payment">
+          Payment: <b>${r.paymentMode.toUpperCase()}</b>
+        </div>
         Status: ${r.status}
 
-        ${r.status==="assigned"?
-          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept Ride</button>`:""}
+        ${r.status==="assigned" ?
+          `<button class="btn accept" onclick="act('${r._id}','accept')">Accept Ride</button>`
+        : ""}
 
-        ${r.status==="accepted"?
-          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete Ride</button>`:""}
+        ${r.status==="accepted" ?
+          `<button class="btn complete" onclick="act('${r._id}','complete')">Complete Ride</button>`
+        : ""}
       </div>`;
     });
+  })
+  .catch(()=>{
+    alert("Server error / invalid Driver ID");
   });
 }
 
-function act(id,type){
+function act(rideId, type){
   fetch(`https://paliride.onrender.com/api/driver/${type}`,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ rideId:id })
-  }).then(()=>load());
+    body:JSON.stringify({ rideId })
+  })
+  .then(()=>load());
 }
 
-setInterval(load,4000);
-load();
+// auto refresh every 5 sec (only if driver loaded)
+setInterval(()=>{
+  if(currentDriverId) load();
+}, 5000);
 </script>
 
 </body>
