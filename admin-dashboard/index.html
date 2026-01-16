@@ -1,33 +1,54 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Pali Ride Admin</title>
+  <title>Pali Ride – Customer</title>
 </head>
 <body>
-<h2>Pali Ride Admin Dashboard</h2>
-<table border="1" cellpadding="8">
-<tr>
-<th>Pickup</th><th>Drop</th><th>Vehicle</th><th>Status</th>
-</tr>
-<tbody id="rows"></tbody>
-</table>
+
+<h3>Customer Ride Booking</h3>
+
+<input id="p" placeholder="Pickup"><br><br>
+<input id="d" placeholder="Drop"><br><br>
+
+<button onclick="book()">Book Ride</button>
 
 <script>
-fetch("http://localhost:5000/api/admin/rides")
-.then(r=>r.json())
-.then(data=>{
-  const t=document.getElementById("rows");
-  data.forEach(r=>{
-    t.innerHTML+=`<tr>
-      <td>${r.pickup}</td>
-      <td>${r.drop}</td>
-      <td>${r.vehicleType}</td>
-      <td>${r.status}</td>
-    </tr>`;
+function book(){
+  const pickup = document.getElementById("p").value.trim();
+  const drop = document.getElementById("d").value.trim();
+
+  if(!pickup || !drop){
+    alert("Pickup aur Drop dono bharna zaruri hai");
+    return;
+  }
+
+  fetch("https://paliride.onrender.com/api/ride/create",{
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      pickup,
+      drop,
+      vehicleType: "bike",
+      fare: 50
+    })
+  })
+  .then(res => {
+    if(!res.ok) throw new Error("Server error");
+    return res.json();
+  })
+  .then(() => {
+    alert("Ride Booked Successfully");
+    document.getElementById("p").value = "";
+    document.getElementById("d").value = "";
+  })
+  .catch(() => {
+    alert("Backend down ya network problem");
   });
-});
+}
 </script>
+
 </body>
 </html>
