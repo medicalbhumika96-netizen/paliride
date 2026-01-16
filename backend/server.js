@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import adminRoutes from "./routes/admin.routes.js";
 import rideRoutes from "./routes/ride.routes.js";
 import driverRoutes from "./routes/driver.routes.js";
+import realtimeRoutes from "./routes/realtime.routes.js"; // ✅ MISSING LINE
 
 dotenv.config();
 
@@ -32,28 +33,17 @@ app.use(express.json());
 app.use("/api/admin", adminRoutes);
 app.use("/api/ride", rideRoutes);
 app.use("/api/driver", driverRoutes);
+app.use("/api/realtime", realtimeRoutes); // ✅ MISSING LINE
 
 /* ===============================
-   (OPTIONAL) SERVE CUSTOMER APP
-   ⚠️ GitHub Pages use kar rahe ho,
-   isliye Render par frontend
-   serve karna optional hai
-================================ */
-// app.use(express.static(path.join(__dirname, "../customer-app")));
-
-// app.get("/", (req, res) => {
-//   res.sendFile(path.join(__dirname, "../customer-app/index.html"));
-// });
-
-/* ===============================
-   HEALTH CHECK (IMPORTANT)
+   HEALTH CHECK
 ================================ */
 app.get("/", (req, res) => {
   res.send("Pali Ride Backend Running 🚀");
 });
 
 /* ===============================
-   MONGODB CONNECTION
+   MONGODB
 ================================ */
 mongoose
   .connect(process.env.MONGO_URI)
