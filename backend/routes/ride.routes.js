@@ -1,35 +1,56 @@
-import express from "express";
-import Ride from "../models/Ride.js";
+let vehicle="bike";
+let fare=40;
+let paymentMode="cash"; // ✅ NEW
 
-const router = express.Router();
+function setVehicle(v){
+  vehicle=v;
+  bike.classList.remove("active");
+  auto.classList.remove("active");
+  document.getElementById(v).classList.add("active");
+}
 
-// allowed fare ranges (Pali-friendly)
-const LIMITS = {
-  bike: { min: 40, max: 120 },
-  auto: { min: 60, max: 180 }
-};
+function setFare(f){
+  fare=f;
+  document.querySelectorAll(".fares button").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+}
 
-router.post("/create", async (req,res)=>{
-  const { pickup, drop, vehicleType, fare } = req.body;
+function setPay(p){
+  paymentMode=p;
+  cash.classList.remove("active");
+  upi.classList.remove("active");
+  document.getElementById(p).classList.add("active");
+}
 
-  if(!pickup || !drop || !vehicleType || !fare){
-    return res.status(400).json({ message:"Missing fields" });
+function bookRide(){
+  if(!pickup.value || !drop.value){
+    return alert("Pickup & Drop required");
   }
 
-  const lim = LIMITS[vehicleType];
-  if(!lim) return res.status(400).json({ message:"Invalid vehicle" });
+  fetch("https://paliride.onrender.com/api/ride/create",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      pickup:pickup.value,
+      drop:drop.value,
+      vehicleType:vehicle,
+      fare,
+      paymentMode // ✅ SEND TO BACKEND
+    })
+  })
+  .then(()=>alert("🚖 Ride booked successfully"));
+}
 
-  if(fare < lim.min || fare > lim.max){
-    return res.status(400).json({
-      message:`Fare must be between ₹${lim.min}–₹${lim.max}`
-    });
-  }
+function wa(){
+  const msg=
+`Pali Ride Booking
+Pickup: ${pickup.value}
+Drop: ${drop.value}
+Vehicle: ${vehicle}
+Fare: ₹${fare}
+Payment: ${paymentMode.toUpperCase()}`;
 
-  const ride = await Ride.create({
-    pickup, drop, vehicleType, fare, status:"requested"
-  });
-
-  res.json({ message:"Ride created", ride });
-});
-
-export default router;
+  window.open(
+    `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`
+  );
+}

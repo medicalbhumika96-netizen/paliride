@@ -136,11 +136,13 @@ body{
     Trusted local drivers • Fixed fare • No surge
   </div>
 </div>
+<div id="statusBox"></div>
 
 <script>
 let vehicle="bike";
 let fare=40;
-let paymentMode="cash"; // ✅ NEW
+let paymentMode="cash";
+let rideId=null;
 
 function setVehicle(v){
   vehicle=v;
@@ -163,10 +165,6 @@ function setPay(p){
 }
 
 function bookRide(){
-  if(!pickup.value || !drop.value){
-    return alert("Pickup & Drop required");
-  }
-
   fetch("https://paliride.onrender.com/api/ride/create",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -175,27 +173,28 @@ function bookRide(){
       drop:drop.value,
       vehicleType:vehicle,
       fare,
-      paymentMode // ✅ SEND TO BACKEND
+      paymentMode
     })
   })
-  .then(()=>alert("🚖 Ride booked successfully"));
+  .then(r=>r.json())
+  .then(d=>{
+    rideId=d.rideId;
+    statusBox.innerHTML="🔍 Searching for driver...";
+    poll();
+  });
 }
 
-function wa(){
-  const msg=
-`Pali Ride Booking
-Pickup: ${pickup.value}
-Drop: ${drop.value}
-Vehicle: ${vehicle}
-Fare: ₹${fare}
-Payment: ${paymentMode.toUpperCase()}`;
-
-  window.open(
-    `https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`
-  );
+function poll(){
+  const t=setInterval(()=>{
+    fetch("https://paliride.onrender.com/api/ride/status/"+rideId)
+    .then(r=>r.json())
+    .then(d=>{
+      statusBox.innerHTML="🚖 Status: "+d.status;
+      if(d.status==="completed") clearInterval(t);
+    });
+  },3000);
 }
 </script>
-
 
 </body>
 </html>
