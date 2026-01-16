@@ -4,40 +4,65 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import driverRoutes from "./routes/driver.routes.js";
+
 import adminRoutes from "./routes/admin.routes.js";
 import rideRoutes from "./routes/ride.routes.js";
+import driverRoutes from "./routes/driver.routes.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
-// --- Fix __dirname for ES Modules ---
+/* ===============================
+   FIX __dirname (ES MODULE)
+================================ */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- Middlewares ---
+/* ===============================
+   MIDDLEWARES
+================================ */
 app.use(cors());
 app.use(express.json());
 
-// --- API Routes ---
+/* ===============================
+   API ROUTES
+================================ */
 app.use("/api/admin", adminRoutes);
 app.use("/api/ride", rideRoutes);
 app.use("/api/driver", driverRoutes);
 
-// --- Serve Frontend (Customer App) ---
-app.use(express.static(path.join(__dirname, "../customer-app")));
+/* ===============================
+   (OPTIONAL) SERVE CUSTOMER APP
+   ⚠️ GitHub Pages use kar rahe ho,
+   isliye Render par frontend
+   serve karna optional hai
+================================ */
+// app.use(express.static(path.join(__dirname, "../customer-app")));
 
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../customer-app/index.html"));
+// });
+
+/* ===============================
+   HEALTH CHECK (IMPORTANT)
+================================ */
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../customer-app/index.html"));
+  res.send("Pali Ride Backend Running 🚀");
 });
 
-// --- MongoDB ---
+/* ===============================
+   MONGODB CONNECTION
+================================ */
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log(err));
+  .catch((err) => console.error("Mongo error:", err));
 
-// --- Start Server ---
-app.listen(PORT, () => console.log("Server running on " + PORT));
+/* ===============================
+   START SERVER
+================================ */
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
