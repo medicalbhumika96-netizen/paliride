@@ -1,54 +1,76 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
-  <title>Pali Ride – Customer</title>
+  <title>Pali Ride – Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      margin: 0
+    }
+
+    .card {
+      background: #fff;
+      margin: 12px;
+      padding: 12px;
+      border-radius: 10px
+    }
+
+    .btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #0a7cff;
+      color: #fff
+    }
+
+    .status {
+      font-weight: bold
+    }
+  </style>
 </head>
+
 <body>
 
-<h3>Customer Ride Booking</h3>
+  <h3 style="text-align:center">Admin – Rides</h3>
+  <div id="list"></div>
 
-<input id="p" placeholder="Pickup"><br><br>
-<input id="d" placeholder="Drop"><br><br>
+  <script>
+    async function load() {
+      const rides = await fetch("https://paliride.onrender.com/api/admin/rides").then(r => r.json());
+      const drivers = await fetch("https://paliride.onrender.com/api/admin/drivers").then(r => r.json());
 
-<button onclick="book()">Book Ride</button>
+      const box = document.getElementById("list");
+      box.innerHTML = "";
+      rides.forEach(r => {
+        box.innerHTML += `
+    <div class="card">
+      <div><b>${r.pickup}</b> → ${r.drop}</div>
+      <div class="status">Status: ${r.status}</div>
+      ${r.status === "requested" ? `
+        <select id="d${r._id}">
+          ${drivers.map(d => `<option value="${d._id}">${d.name}</option>`)}
+        </select>
+        <button class="btn" onclick="assign('${r._id}')">Assign</button>
+      `: ""}
+    </div>`;
+      });
+    }
 
-<script>
-function book(){
-  const pickup = document.getElementById("p").value.trim();
-  const drop = document.getElementById("d").value.trim();
+    function assign(rideId) {
+      const driverId = document.getElementById("d" + rideId).value;
+      fetch("https://paliride.onrender.com/api/admin/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rideId, driverId })
+      }).then(() => load());
+    }
 
-  if(!pickup || !drop){
-    alert("Pickup aur Drop dono bharna zaruri hai");
-    return;
-  }
-
-  fetch("https://paliride.onrender.com/api/ride/create",{
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      pickup,
-      drop,
-      vehicleType: "bike",
-      fare: 50
-    })
-  })
-  .then(res => {
-    if(!res.ok) throw new Error("Server error");
-    return res.json();
-  })
-  .then(() => {
-    alert("Ride Booked Successfully");
-    document.getElementById("p").value = "";
-    document.getElementById("d").value = "";
-  })
-  .catch(() => {
-    alert("Backend down ya network problem");
-  });
-}
-</script>
-
+    load();
+  </script>
 </body>
+
 </html>

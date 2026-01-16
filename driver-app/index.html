@@ -1,8 +1,37 @@
-
 <!DOCTYPE html>
 <html>
 <body>
-<h3>Driver App</h3>
-<p>Driver features (accept / complete ride) will be added here.</p>
+<h3>Driver Panel</h3>
+
+<input id="driverId" placeholder="Driver ID"><br><br>
+<button onclick="load()">Load Rides</button>
+<div id="rides"></div>
+
+<script>
+function load(){
+fetch(`https://paliride.onrender.com/api/driver/${driverId.value}/rides`)
+.then(r=>r.json())
+.then(data=>{
+  const box=document.getElementById("rides");
+  box.innerHTML="";
+  data.forEach(r=>{
+    box.innerHTML+=`
+    <div>
+      ${r.pickup} → ${r.drop}
+      <button onclick="act('${r._id}','accept')">Accept</button>
+      <button onclick="act('${r._id}','complete')">Complete</button>
+    </div>`;
+  });
+});
+}
+
+function act(id,type){
+fetch(`https://paliride.onrender.com/api/driver/${type}`,{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({ rideId:id })
+}).then(()=>load());
+}
+</script>
 </body>
 </html>

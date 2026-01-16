@@ -1,9 +1,16 @@
-
 import mongoose from "mongoose";
-export default mongoose.model("Ride", new mongoose.Schema({
-  pickup:String,
-  drop:String,
-  vehicleType:String,
-  fare:Number,
-  status:{type:String,default:"requested"}
-},{timestamps:true}));
+
+const rideSchema = new mongoose.Schema({
+  pickup: String,
+  drop: String,
+  vehicleType: String,
+  fare: Number,
+  status: {
+    type: String,
+    enum: ["requested","assigned","accepted","completed","cancelled"],
+    default: "requested"
+  },
+  driver: { type: mongoose.Schema.Types.ObjectId, ref: "Driver" }
+},{ timestamps:true });
+
+export default mongoose.model("Ride", rideSchema);

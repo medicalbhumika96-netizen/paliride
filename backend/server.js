@@ -4,7 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import driverRoutes from "./routes/driver.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import rideRoutes from "./routes/ride.routes.js";
 
@@ -24,6 +24,7 @@ app.use(express.json());
 // --- API Routes ---
 app.use("/api/admin", adminRoutes);
 app.use("/api/ride", rideRoutes);
+app.use("/api/driver", driverRoutes);
 
 // --- Serve Frontend (Customer App) ---
 app.use(express.static(path.join(__dirname, "../customer-app")));

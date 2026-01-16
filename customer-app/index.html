@@ -3,48 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <title>Pali Ride – Customer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#f4f6f8;
+      margin:0;
+      padding:0;
+    }
+    .card{
+      max-width:360px;
+      margin:60px auto;
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    h3{
+      text-align:center;
+      margin-bottom:20px;
+    }
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border:1px solid #ccc;
+      border-radius:6px;
+      font-size:15px;
+    }
+    button{
+      width:100%;
+      padding:12px;
+      background:#0a7cff;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      font-size:16px;
+      cursor:pointer;
+    }
+    button:active{
+      opacity:0.9;
+    }
+  </style>
 </head>
 <body>
 
-<h3>Customer Ride Booking</h3>
+<div class="card">
+  <h3>🚕 Pali Ride</h3>
 
-<input id="p" placeholder="Pickup"><br><br>
-<input id="d" placeholder="Drop"><br><br>
+  <input id="p" placeholder="Pickup location">
+  <input id="d" placeholder="Drop location">
 
-<button onclick="book()">Book Ride</button>
+  <button onclick="book()">Book Ride</button>
+</div>
 
 <script>
 function book(){
-  const pickup = document.getElementById("p").value.trim();
-  const drop = document.getElementById("d").value.trim();
+  const pickup = p.value.trim();
+  const drop = d.value.trim();
 
-  // ✅ Validation
   if(!pickup || !drop){
     alert("Pickup aur Drop dono bharna zaruri hai");
     return;
   }
 
-  fetch("https://paliride.onrender.com/api/ride/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  fetch("https://paliride.onrender.com/api/ride/create",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
       pickup,
       drop,
-      vehicleType: "bike",
-      fare: 50
+      vehicleType:"bike",
+      fare:50
     })
   })
-  .then(res => {
-    if(!res.ok) throw new Error("Server error");
+  .then(res=>{
+    if(!res.ok) throw new Error();
     return res.json();
   })
-  .then(() => {
+  .then(()=>{
     alert("Ride Booked Successfully");
-    document.getElementById("p").value = "";
-    document.getElementById("d").value = "";
+    p.value="";
+    d.value="";
   })
-  .catch(() => {
-    alert("Backend down ya network issue");
+  .catch(()=>{
+    alert("Network / Server issue");
   });
 }
 </script>
