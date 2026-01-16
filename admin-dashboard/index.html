@@ -5,6 +5,18 @@
   <meta charset="UTF-8">
   <title>Pali Ride – Admin</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <div class="card">
+  <h4>➕ Create Ride (WhatsApp)</h4>
+  <input id="ap" placeholder="Pickup">
+  <input id="ad" placeholder="Drop">
+  <select id="av">
+    <option value="bike">Bike</option>
+    <option value="auto">Auto</option>
+  </select>
+  <input id="af" type="number" placeholder="Fare">
+  <button class="btn" onclick="adminCreate()">Create Ride</button>
+</div>
+
   <style>
     body {
       font-family: Arial;
@@ -70,6 +82,29 @@
     }
 
     load();
+    function adminCreate(){
+  const pickup = ap.value.trim();
+  const drop = ad.value.trim();
+  const vehicleType = av.value;
+  const fare = Number(af.value);
+
+  if(!pickup || !drop || !fare){
+    return alert("All fields required");
+  }
+
+  fetch("https://paliride.onrender.com/api/ride/create",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ pickup, drop, vehicleType, fare })
+  })
+  .then(r=>r.json())
+  .then(()=>{
+    ap.value=""; ad.value=""; af.value="";
+    load(); // refresh list
+    alert("Ride created from WhatsApp");
+  })
+  .catch(()=>alert("Error creating ride"));
+}
   </script>
 </body>
 

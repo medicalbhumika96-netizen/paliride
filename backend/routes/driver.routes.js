@@ -19,6 +19,23 @@ router.post("/accept", async (req,res)=>{
   res.json({ message:"Ride accepted" });
 });
 
+// set availability
+router.post("/availability", async (req,res)=>{
+  const { driverId, isAvailable } = req.body;
+  await Driver.findByIdAndUpdate(driverId,{ isAvailable });
+  res.json({ message:"Availability updated" });
+});
+// accept ride (safe)
+router.post("/accept", async (req,res)=>{
+  const ride = await Ride.findById(req.body.rideId);
+  if(ride.status !== "assigned"){
+    return res.status(400).json({ message:"Ride not assignable" });
+  }
+  await Ride.findByIdAndUpdate(ride._id,{ status:"accepted" });
+  res.json({ message:"Ride accepted" });
+});
+
+
 // complete ride
 router.post("/complete", async (req,res)=>{
   const ride = await Ride.findById(req.body.rideId);

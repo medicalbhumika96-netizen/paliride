@@ -1,97 +1,163 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Pali Ride – Customer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body{
-      font-family: Arial, sans-serif;
-      background:#f4f6f8;
-      margin:0;
-      padding:0;
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      margin: 0
     }
-    .card{
-      max-width:360px;
-      margin:60px auto;
-      background:#fff;
-      padding:20px;
-      border-radius:10px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+
+    .card {
+      max-width: 380px;
+      margin: 60px auto;
+      background: #fff;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .1)
     }
-    h3{
-      text-align:center;
-      margin-bottom:20px;
+
+    h3 {
+      text-align: center;
+      margin: 10px 0
     }
-    input{
-      width:100%;
-      padding:12px;
-      margin-bottom:12px;
-      border:1px solid #ccc;
-      border-radius:6px;
-      font-size:15px;
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px
     }
-    button{
-      width:100%;
-      padding:12px;
-      background:#0a7cff;
-      color:#fff;
-      border:none;
-      border-radius:6px;
-      font-size:16px;
-      cursor:pointer;
+
+    .fares {
+      display: flex;
+      gap: 8px
     }
-    button:active{
-      opacity:0.9;
+
+    .fares button {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #0a7cff;
+      border-radius: 6px;
+      background: #fff
+    }
+
+    .fares button.active {
+      background: #0a7cff;
+      color: #fff
+    }
+
+    button.main {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #0a7cff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px
+    }
+
+    small {
+      color: #555
     }
   </style>
 </head>
+
 <body>
 
-<div class="card">
-  <h3>🚕 Pali Ride</h3>
+  <div class="card">
+    <h3>🚕 Pali Ride</h3>
 
-  <input id="p" placeholder="Pickup location">
-  <input id="d" placeholder="Drop location">
+    <input id="p" placeholder="Pickup location">
+    <input id="d" placeholder="Drop location">
 
-  <button onclick="book()">Book Ride</button>
-</div>
+    <select id="v" onchange="setFares()">
+      <option value="bike">Bike</option>
+      <option value="auto">Auto</option>
+    </select>
 
-<script>
-function book(){
+    <small>Select fare</small>
+    <div class="fares" id="fareBtns"></div>
+
+    <button class="main" onclick="book()">Book Ride</button>
+  </div>
+<button class="main" onclick="book()">Book Ride</button>
+<button class="main" style="background:#25D366;margin-top:8px" onclick="wa()">📲 Book via WhatsApp</button>
+
+  <script>
+    let selectedFare = 0;
+
+    const FARES = {
+      bike: [40, 60, 80, 100, 120],
+      auto: [60, 90, 120, 150, 180]
+    };
+
+    function setFares() {
+      const v = document.getElementById("v").value;
+      const box = document.getElementById("fareBtns");
+      box.innerHTML = "";
+      selectedFare = 0;
+      FARES[v].forEach(f => {
+        const b = document.createElement("button");
+        b.innerText = "₹" + f;
+        b.onclick = () => selectFare(b, f);
+        box.appendChild(b);
+      });
+    }
+    function selectFare(btn, f) {
+      [...document.querySelectorAll(".fares button")].forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedFare = f;
+    }
+    setFares();
+
+    function book() {
+      const pickup = p.value.trim(), drop = d.value.trim(), vehicleType = v.value;
+      if (!pickup || !drop || !selectedFare) {
+        return alert("Pickup, Drop aur Fare select karo");
+      }
+      fetch("https://paliride.onrender.com/api/ride/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pickup, drop, vehicleType, fare: selectedFare })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.message !== "Ride created") throw new Error();
+          alert("Ride Booked Successfully");
+          p.value = ""; d.value = ""; setFares();
+        })
+        .catch(e => alert(e.message || "Server issue"));
+    }
+    function wa(){
   const pickup = p.value.trim();
   const drop = d.value.trim();
-
-  if(!pickup || !drop){
-    alert("Pickup aur Drop dono bharna zaruri hai");
-    return;
+  const vehicleType = v.value;
+  if(!pickup || !drop || !selectedFare){
+    return alert("Pickup, Drop aur Fare select karo");
   }
 
-  fetch("https://paliride.onrender.com/api/ride/create",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      pickup,
-      drop,
-      vehicleType:"bike",
-      fare:50
-    })
-  })
-  .then(res=>{
-    if(!res.ok) throw new Error();
-    return res.json();
-  })
-  .then(()=>{
-    alert("Ride Booked Successfully");
-    p.value="";
-    d.value="";
-  })
-  .catch(()=>{
-    alert("Network / Server issue");
-  });
+  const msg =
+`Hello Pali Ride 👋
+Pickup: ${pickup}
+Drop: ${drop}
+Vehicle: ${vehicleType}
+Fare: ₹${selectedFare}`;
+
+  // 👉 Admin WhatsApp number (country code ke sath)
+  const ADMIN_WA = "91XXXXXXXXXX"; // ← yahan apna number
+  const url = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
 }
-</script>
+  </script>
 
 </body>
+
 </html>
