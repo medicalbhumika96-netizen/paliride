@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Pali Ride – Driver</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="driver.css">
+<head>
+  <meta charset="UTF-8">
+  <title>Pali Ride – Driver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="driver.css">
 </head>
 
 <body>
 
-<div class="app">
+  <div class="app">
 
-  <div class="header">🚖 Pali Ride – Driver</div>
+    <div class="header">🚖 Pali Ride – Driver</div>
 
-  <!-- LOGIN -->
-  <div id="loginBox" class="card">
-    <input id="name" placeholder="Driver name">
-    <input id="phone" placeholder="Mobile number">
-    <input id="pin" type="password" placeholder="4-digit PIN">
-    <button class="btn primary" onclick="login()">Login</button>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div id="dash" class="hidden">
-
-    <div class="card">
-      <div id="welcome"></div>
-      <button id="onBtn" class="btn green" onclick="setAvail(true)">🟢 Go Online</button>
-      <button id="offBtn" class="btn red hidden" onclick="setAvail(false)">🔴 Go Offline</button>
+    <!-- LOGIN -->
+    <div id="loginBox" class="card">
+      <input id="name" placeholder="Driver name">
+      <input id="phone" placeholder="Mobile number">
+      <input id="pin" type="password" placeholder="4-digit PIN">
+      <button class="btn primary" onclick="login()">Login</button>
     </div>
 
-    <div id="rides"></div>
+    <!-- DASHBOARD -->
+    <div id="dash" class="hidden">
+
+      <div class="card">
+        <div id="welcome"></div>
+        <button id="onBtn" class="btn green" onclick="setAvail(true)">🟢 Go Online</button>
+        <button id="offBtn" class="btn red hidden" onclick="setAvail(false)">🔴 Go Offline</button>
+      </div>
+
+      <div id="rides"></div>
+
+    </div>
 
   </div>
 
-</div>
+  <script src="driver.js">
 
-<!-- 🔔 NOTIFICATION SOUND -->
-<audio id="beep" preload="auto">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-</audio>
+  </script>
 
-<script src="driver.js"></script>
 </body>
+
 </html>
