@@ -1,28 +1,52 @@
-*{box-sizing:border-box;font-family:system-ui}
+*{
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system;
+}
+
 body{
   margin:0;
-  background:linear-gradient(180deg,#020617,#0f172a);
+  background:linear-gradient(135deg,#0f172a,#020617);
   color:#fff;
 }
+
+/* SPLASH */
+#splash{
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:#020617;
+  z-index:10;
+}
+.logo{
+  font-size:36px;
+  font-weight:700;
+}
+.tag{
+  font-size:14px;
+  color:#94a3b8;
+}
+
+/* APP */
 .app{
   max-width:420px;
   margin:auto;
-  padding:16px;
+  padding:20px;
 }
-.header{
+.hidden{display:none}
+
+header{
   text-align:center;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
-.header h1{
-  margin:0;
-  font-size:26px;
-}
-.header p{
-  margin:4px 0 0;
+header span{
+  color:#94a3b8;
   font-size:13px;
-  opacity:.85;
 }
 
+/* MODES */
 .modes{
   display:flex;
   gap:8px;
@@ -30,79 +54,64 @@ body{
   margin-bottom:14px;
 }
 .mode{
-  min-width:74px;
+  padding:8px 12px;
+  border-radius:14px;
   background:#111827;
-  border-radius:16px;
-  padding:10px 6px;
-  text-align:center;
-  font-size:13px;
-  opacity:.6;
+  white-space:nowrap;
   cursor:pointer;
 }
-.mode span{
-  display:block;
-  margin-top:4px;
-  font-size:11px;
-}
 .mode.active{
-  opacity:1;
   background:#0a7cff;
 }
 .mode.emergency{
   background:#7f1d1d;
 }
-.mode.night{
-  background:#1e293b;
-}
 
-.card{
-  background:#0f172a;
-  border-radius:20px;
-  padding:16px;
-  box-shadow:0 15px 35px rgba(0,0,0,.4);
-}
+/* INPUT */
 input{
   width:100%;
   padding:14px;
+  margin-bottom:10px;
   border-radius:14px;
   border:none;
-  margin-bottom:10px;
-  font-size:15px;
+  background:#111827;
+  color:#fff;
 }
-.vehicle,.payment{
+
+/* SWITCH */
+.switch{
   display:flex;
   gap:10px;
   margin-bottom:12px;
 }
-.vehicle button,.payment button{
+.switch button{
   flex:1;
   padding:12px;
   border-radius:14px;
   border:none;
-  background:#1e293b;
+  background:#111827;
   color:#fff;
 }
-.vehicle button.active,
-.payment button.active{
+.switch .active{
   background:#0a7cff;
 }
+
+/* PRIMARY */
 .primary{
   width:100%;
-  padding:15px;
-  border-radius:18px;
+  padding:16px;
+  border-radius:20px;
   border:none;
   background:#22c55e;
-  color:#022c22;
   font-size:16px;
   font-weight:600;
+  color:#000;
 }
-#statusBox{
-  margin-top:12px;
-  font-size:14px;
-}
-.trust{
-  text-align:center;
-  margin-top:14px;
-  font-size:11px;
-  opacity:.8;
+
+/* STATUS */
+.status{
+  margin-top:16px;
+  background:#020617;
+  border-radius:16px;
+  padding:14px;
 }

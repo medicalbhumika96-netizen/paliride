@@ -9,61 +9,50 @@
 
 <body>
 
-<div class="app">
+<!-- SPLASH -->
+<div id="splash">
+  <div class="logo">🚕 Pali Ride</div>
+  <div class="tag">Rajasthan ka apna ride</div>
+</div>
 
-  <!-- HEADER -->
-  <div class="header">
-    <h1>Pali Ride</h1>
-    <p>Har zarurat ke liye ek hi ride</p>
-  </div>
+<!-- APP -->
+<div class="app hidden" id="app">
+
+  <header>
+    <h2>Pali Ride</h2>
+    <span>Select your ride</span>
+  </header>
 
   <!-- RIDE MODES -->
   <div class="modes">
-    <div class="mode active" onclick="selectMode('student')">
-      🎓<span>Student</span>
-    </div>
-    <div class="mode" onclick="selectMode('office')">
-      🧑‍💼<span>Office</span>
-    </div>
-    <div class="mode emergency" onclick="selectMode('emergency')">
-      🚑<span>Emergency</span>
-    </div>
-    <div class="mode" onclick="selectMode('village')">
-      🌾<span>Village</span>
-    </div>
-    <div class="mode night" onclick="selectMode('night')">
-      🌙<span>Night</span>
-    </div>
+    <div class="mode active" onclick="selectMode('student')">🎓 Student</div>
+    <div class="mode" onclick="selectMode('office')">🏢 Office</div>
+    <div class="mode emergency" onclick="selectMode('emergency')">🚑 Emergency</div>
+    <div class="mode" onclick="selectMode('night')">🌙 Night</div>
+    <div class="mode" onclick="selectMode('village')">🌾 Village</div>
   </div>
 
-  <!-- BOOKING CARD -->
-  <div class="card">
+  <!-- INPUTS -->
+  <input id="name" placeholder="Your Name">
+  <input id="phone" placeholder="Mobile Number">
+  <input id="pickup" placeholder="Pickup Location">
+  <input id="drop" placeholder="Drop Location">
 
-    <input id="name" placeholder="Your name">
-    <input id="phone" placeholder="Mobile number">
-    <input id="pickup" placeholder="Pickup location">
-    <input id="drop" placeholder="Drop location">
-
-    <div class="vehicle">
-      <button id="bike" class="active" onclick="setVehicle('bike')">🏍 Bike</button>
-      <button id="auto" onclick="setVehicle('auto')">🛺 Auto</button>
-    </div>
-
-    <div class="payment">
-      <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
-      <button id="upi" onclick="setPay('upi')">📲 UPI</button>
-    </div>
-
-    <button class="primary" onclick="bookRide()">Confirm Ride</button>
-
-    <div id="statusBox"></div>
-
+  <!-- VEHICLE -->
+  <div class="switch">
+    <button id="bike" class="active" onclick="setVehicle('bike')">🏍 Bike</button>
+    <button id="auto" onclick="setVehicle('auto')">🛺 Auto</button>
   </div>
 
-  <!-- TRUST FOOTER -->
-  <div class="trust">
-    ✔ Verified local drivers &nbsp;•&nbsp; ✔ Fixed fare &nbsp;•&nbsp; ✔ 24×7 support
+  <!-- PAYMENT -->
+  <div class="switch">
+    <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
+    <button id="upi" onclick="setPay('upi')">📲 UPI</button>
   </div>
+
+  <button class="primary" onclick="bookRide()">Confirm Ride</button>
+
+  <div id="statusBox" class="status hidden"></div>
 
 </div>
 
