@@ -123,4 +123,23 @@ router.post("/complete", async (req, res) => {
   res.json({ message: "Ride completed" });
 });
 
+/**
+ * COLLECT PAYMENT
+ * POST /api/driver/collect-payment
+ * body: { rideId }
+ */
+router.post("/collect-payment", async (req, res) => {
+  const { rideId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(rideId)) {
+    return res.status(400).json({ message: "Invalid rideId" });
+  }
+
+  await Ride.findByIdAndUpdate(rideId, {
+    paymentStatus: "collected"
+  });
+
+  res.json({ message: "Payment marked as collected" });
+});
+
 export default router;

@@ -1,7 +1,13 @@
-export function calculateFare(distanceKm, vehicleType) {
-  const rate = vehicleType === "auto" ? 18 : 12;
-  const minFare = vehicleType === "auto" ? 60 : 40;
+export function calculateFare(vehicle, km){
+  km = Number(km);
 
-  const fare = Math.round(distanceKm * rate);
-  return fare < minFare ? minFare : fare;
+  if(vehicle === "bike"){
+    return Math.max(30, Math.round(km * 12));
+  }
+
+  if(vehicle === "auto"){
+    return Math.max(50, Math.round(km * 18));
+  }
+
+  return Math.round(km * 15);
 }

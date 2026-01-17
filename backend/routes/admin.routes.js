@@ -53,5 +53,19 @@ router.post("/assign", async (req, res) => {
 
   res.json({ message: "Driver assigned successfully" });
 });
+/**
+ * TODAY COLLECTION
+ */
+router.get("/collections", async (req, res) => {
+  const total = await Ride.aggregate([
+    { $match: { paymentStatus: "collected" } },
+    { $group: { _id: null, sum: { $sum: "$fare" } } }
+  ]);
+
+  res.json({
+    total: total[0]?.sum || 0
+  });
+});
+
 
 export default router;

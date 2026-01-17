@@ -50,3 +50,18 @@ input{
   opacity:.8;
 }
 .hidden{ display:none }
+
+.ride-head {
+  font-size:15px;
+  font-weight:600;
+}
+.ride-info {
+  margin:6px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.ride-actions {
+  display:flex;
+  gap:8px;
+}

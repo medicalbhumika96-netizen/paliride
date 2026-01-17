@@ -4,6 +4,9 @@ let paymentMode = "cash";
 let rideId = null;
 let pollTimer = null;
 
+// ⚠️ अभी testing के लिए रहने दो, बाद में backend shift करेंगे
+const MAPS_KEY = "PASTE_YOUR_GOOGLE_MAPS_KEY_HERE";
+
 /* ===============================
    UI HELPERS
 ================================ */
@@ -32,13 +35,33 @@ function setPay(p){
 /* ===============================
    BOOK RIDE
 ================================ */
-function bookRide(){
+async function bookRide(){
   if(!pickup.value || !drop.value){
     return alert("Pickup & Drop required");
   }
 
-  const distanceKm = Number(prompt("Approx distance (KM)?", 3));
-  if(!distanceKm || distanceKm <= 0) return;
+  statusBox.style.display = "block";
+  statusBox.innerHTML = "📍 Calculating distance...";
+
+  // 🔹 Google Distance Matrix
+  const url =
+    `https://maps.googleapis.com/maps/api/distancematrix/json` +
+    `?origins=${encodeURIComponent(pickup.value)}` +
+    `&destinations=${encodeURIComponent(drop.value)}` +
+    `&key=${MAPS_KEY}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if(data.status !== "OK"){
+    return alert("Map error");
+  }
+
+  const meters = data.rows[0].elements[0].distance.value;
+  const distanceKm = (meters / 1000).toFixed(2);
+
+  statusBox.innerHTML =
+    `📍 Distance: ${distanceKm} KM<br>💰 Calculating fare...`;
 
   fetch("https://paliride.onrender.com/api/ride/create",{
     method:"POST",
@@ -51,12 +74,12 @@ function bookRide(){
       paymentMode
     })
   })
-  .then(r => r.json())
-  .then(d => {
+  .then(r=>r.json())
+  .then(d=>{
     rideId = d.rideId;
-    statusBox.style.display = "block";
-    statusBox.innerHTML = "🔍 Searching for driver...";
-    pollTimer = setInterval(poll, 4000); // backup polling
+    statusBox.innerHTML =
+      `💰 Fare: ₹${d.fare}<br>🔍 Searching for driver...`;
+    pollTimer = setInterval(poll, 4000);
   });
 }
 
@@ -71,11 +94,14 @@ function poll(){
     .then(d => {
       if(!d) return;
 
-      statusBox.innerHTML =
-        `Status: <b>${d.status}</b><br>
-         Fare: ₹${d.fare}<br>
-         Payment: ${d.paymentMode}`;
-
+     statusBox.innerHTML = `
+  <b>🚕 Ride Status</b><br>
+  <span class="pill blue">${d.status}</span><br><br>
+  💰 Fare: ₹${d.fare}<br>
+  💳 Payment: ${d.paymentMode.toUpperCase()}<br>
+  📦 Payment Status: ${d.paymentStatus}
+`;
+            
       if(d.status === "completed"){
         statusBox.innerHTML += "<br>✅ Ride completed";
         clearInterval(pollTimer);

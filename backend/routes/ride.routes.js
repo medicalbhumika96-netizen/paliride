@@ -10,19 +10,8 @@ const router = express.Router();
 ================================ */
 router.post("/create", async (req, res) => {
   try {
-    const {
-      pickup,
-      drop,
-      vehicleType,
-      distanceKm,
-      paymentMode
-    } = req.body;
+    const { pickup, drop, vehicleType, distanceKm, paymentMode } = req.body;
 
-    if (!pickup || !drop || !vehicleType || !distanceKm) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    // ✅ BACKEND decides fare (SECURE)
     const fare = calculateFare(vehicleType, distanceKm);
 
     const ride = await Ride.create({
@@ -31,13 +20,12 @@ router.post("/create", async (req, res) => {
       vehicleType,
       distanceKm,
       fare,
-      paymentMode: paymentMode || "cash",
+      paymentMode,
       status: "requested"
     });
 
-    // ✅ AUTO ASSIGN DRIVER (if available)
+    // auto assign
     const driver = await Driver.findOne({ isAvailable: true });
-
     if (driver) {
       ride.driver = driver._id;
       ride.status = "assigned";
@@ -49,15 +37,15 @@ router.post("/create", async (req, res) => {
 
     res.json({
       rideId: ride._id,
-      status: ride.status,
-      fare
+      fare,
+      status: ride.status
     });
 
   } catch (err) {
-    console.error("Create ride error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: err.message });
   }
 });
+  
 
 /* ===============================
    GET RIDE STATUS (POLLING)

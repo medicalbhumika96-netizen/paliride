@@ -61,3 +61,28 @@ button.active{
   background:#f3f4f6;
   font-size:14px;
 }
+.status-card {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+  font-size: 14px;
+}
+.pill {
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+.blue { background:#dbeafe; color:#1e40af; }
+.green { background:#dcfce7; color:#166534; }
+.orange { background:#ffedd5; color:#9a3412; }
+
+button {
+  transition: all .15s ease;
+}
+button:active {
+  transform: scale(.97);
+}

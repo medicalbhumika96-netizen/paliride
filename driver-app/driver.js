@@ -80,29 +80,51 @@ function loadRides() {
       }
 
       list.forEach(r => {
-        rides.innerHTML += `
-        <div class="card ride">
-          <b>${r.pickup}</b> → ${r.drop}<br>
-          Fare: ₹${r.fare}<br>
-          Payment: ${r.paymentMode?.toUpperCase() || "CASH"}<br>
-          <span class="status">Status: ${r.status}</span>
+       rides.innerHTML += `
+<div class="card ride">
+  <div class="ride-head">
+    <b>${r.pickup}</b> → ${r.drop}
+  </div>
 
-          ${
-            r.status === "assigned"
-              ? `<button class="btn green" onclick="act('${r._id}','accept')">Accept Ride</button>`
-              : ""
-          }
+  <div class="ride-info">
+    💰 ₹${r.fare}
+    <span class="pill ${r.paymentStatus==="collected"?"green":"orange"}">
+      ${r.paymentStatus}
+    </span>
+  </div>
 
-          ${
-            r.status === "accepted"
-              ? `<button class="btn primary" onclick="act('${r._id}','complete')">Complete Ride</button>`
-              : ""
-          }
-        </div>`;
+  <div class="ride-actions">
+    ${
+      r.status==="assigned"
+        ? `<button class="btn green" onclick="act('${r._id}','accept')">Accept</button>`
+        : ""
+    }
+    ${
+      r.status==="accepted"
+        ? `<button class="btn primary" onclick="act('${r._id}','complete')">Complete</button>`
+        : ""
+    }
+    ${
+      r.status==="completed" && r.paymentStatus!=="collected"
+        ? `<button class="btn green" onclick="collectPay('${r._id}')">Collect ₹</button>`
+        : ""
+    }
+  </div>
+</div>`;
+
       });
     })
     .catch(() => {});
 }
+function collectPay(id){
+  fetch(API+"/collect-payment",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ rideId:id })
+  })
+  .then(()=>loadRides());
+}
+
 
 /* ===============================
    ACTIONS
@@ -116,7 +138,7 @@ function act(id, type) {
 }
 
 /* ===============================
-   REALTIME (PRIMARY)
+   REALTIME (PRIMARY)   
 ================================ */
 const es = new EventSource(
   "https://paliride.onrender.com/api/realtime/stream"
