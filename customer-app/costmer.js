@@ -51,36 +51,45 @@ function setPay(p) {
   document.getElementById(p).classList.add("active");
 }
 
-/* BOOK */
-function bookRide() {
-  if (!name.value || !phone.value || !pickup.value || !drop.value) {
-    return alert("All fields required");
+async function bookRide() {
+  const nameVal = name.value.trim();
+  const phoneVal = phone.value.trim();
+  const pickupVal = pickup.value.trim();
+  const dropVal = drop.value.trim();
+
+  if (!nameVal || !phoneVal || !pickupVal || !dropVal) {
+    alert("All fields required");
+    return;
   }
 
   statusBox.classList.remove("hidden");
-  statusBox.innerHTML =
-    `🚕 <b>${rideType.toUpperCase()}</b><br>
-   Searching nearest driver...`;
+  statusBox.innerHTML = "🚕 Creating ride...";
 
   fetch("https://paliride.onrender.com/api/ride/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      customerName: name.value,
-      customerPhone: phone.value,
-      pickup: pickup.value,
-      drop: drop.value,
+      customerName: nameVal,
+      customerPhone: phoneVal,
+      pickup: pickupVal,
+      drop: dropVal,
       vehicleType: vehicle,
-      paymentMode,
-      rideType
+      paymentMode: paymentMode,
+      rideType: rideType,
+      distanceKm: null   // GMAPS key नहीं है → allowed
     })
   })
-    .then(r => r.json())
-    .then(d => {
-      rideId = d.rideId;
-      statusBox.innerHTML += "<br>⏳ Waiting for driver";
-    });
+  .then(r => r.json())
+  .then(d => {
+    rideId = d.rideId;
+    statusBox.innerHTML = "🔍 Searching nearby driver...";
+    pollTimer = setInterval(poll, 4000);
+  })
+  .catch(() => {
+    statusBox.innerHTML = "❌ Server error";
+  });
 }
+
 // safety fallback
 setTimeout(() => {
   document.getElementById("splash")?.remove();
