@@ -1,0 +1,52 @@
+*{box-sizing:border-box;font-family:system-ui}
+body{
+  margin:0;
+  background:linear-gradient(180deg,#020617,#020617);
+  color:#fff;
+}
+.app{
+  max-width:420px;
+  margin:auto;
+  padding:16px;
+}
+.header{
+  text-align:center;
+  font-size:22px;
+  font-weight:600;
+  margin-bottom:16px;
+}
+.card{
+  background:#111827;
+  padding:16px;
+  border-radius:18px;
+  margin-bottom:14px;
+}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  margin-bottom:10px;
+  font-size:15px;
+}
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  margin-top:6px;
+}
+.primary{ background:#0a7cff; color:#fff }
+.green{ background:#22c55e; color:#000 }
+.red{ background:#ef4444; color:#fff }
+.ride{
+  border-top:1px solid #1f2937;
+  padding-top:10px;
+  margin-top:10px;
+}
+.status{
+  font-size:13px;
+  opacity:.8;
+}
+.hidden{ display:none }

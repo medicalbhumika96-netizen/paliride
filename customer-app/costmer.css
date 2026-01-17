@@ -1,0 +1,63 @@
+*{box-sizing:border-box;font-family:system-ui}
+body{
+  margin:0;
+  height:100vh;
+  background:linear-gradient(135deg,#0a7cff,#4f46e5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.app{
+  width:100%;
+  max-width:380px;
+  background:#fff;
+  border-radius:24px;
+  padding:22px;
+  box-shadow:0 20px 40px rgba(0,0,0,.25);
+}
+.header{text-align:center;margin-bottom:16px}
+.header h2{margin:0;font-size:22px}
+.header span{font-size:13px;color:#555}
+
+.input{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ddd;
+  margin-bottom:12px;
+  font-size:15px;
+}
+
+.vehicle,.fares{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.vehicle button,.fares button{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:2px solid #ddd;
+  background:#fff;
+  font-weight:bold;
+}
+button.active{
+  border-color:#0a7cff;
+  background:#eef5ff;
+}
+
+.primary{
+  width:100%;
+  padding:14px;
+  border-radius:18px;
+  border:none;
+  font-size:16px;
+  background:#0a7cff;
+  color:#fff;
+  margin-bottom:10px;
+}
+.whatsapp{background:#22c55e}
+
+#statusBox{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:#f3f4f6;
+  font-size:14px;
+}

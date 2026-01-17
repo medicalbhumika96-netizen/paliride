@@ -5,60 +5,7 @@
 <title>Pali Ride – Driver</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-*{box-sizing:border-box;font-family:system-ui}
-body{
-  margin:0;
-  background:linear-gradient(180deg,#020617,#020617);
-  color:#fff;
-}
-.app{
-  max-width:420px;
-  margin:auto;
-  padding:16px;
-}
-.header{
-  text-align:center;
-  font-size:22px;
-  font-weight:600;
-  margin-bottom:16px;
-}
-.card{
-  background:#111827;
-  padding:16px;
-  border-radius:18px;
-  margin-bottom:14px;
-}
-input{
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  margin-bottom:10px;
-  font-size:15px;
-}
-.btn{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  font-size:16px;
-  margin-top:6px;
-}
-.primary{ background:#0a7cff; color:#fff }
-.green{ background:#22c55e; color:#000 }
-.red{ background:#ef4444; color:#fff }
-.ride{
-  border-top:1px solid #1f2937;
-  padding-top:10px;
-  margin-top:10px;
-}
-.status{
-  font-size:13px;
-  opacity:.8;
-}
-.hidden{ display:none }
-</style>
+<link rel="stylesheet" href="driver.css">
 </head>
 
 <body>
@@ -90,121 +37,11 @@ input{
 
 </div>
 
-<script>
-const API="https://paliride.onrender.com/api/driver";
-let driverId=null;
+<!-- 🔔 NOTIFICATION SOUND -->
+<audio id="beep" preload="auto">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+</audio>
 
-/* ===============================
-   INIT
-================================ */
-if(localStorage.getItem("driverId")){
-  driverId=localStorage.getItem("driverId");
-  showDash();
-}
-
-/* ===============================
-   LOGIN
-================================ */
-function login(){
-  fetch(API+"/login",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      name:name.value,
-      phone:phone.value,
-      pin:pin.value
-    })
-  })
-  .then(r=>r.json())
-  .then(d=>{
-    if(!d.driverId) return alert(d.message);
-    localStorage.setItem("driverId",d.driverId);
-    driverId=d.driverId;
-    showDash(d.name);
-  });
-}
-
-/* ===============================
-   DASHBOARD
-================================ */
-function showDash(n){
-  loginBox.classList.add("hidden");
-  dash.classList.remove("hidden");
-  welcome.innerHTML="Welcome, <b>"+(n||"Driver")+"</b>";
-  loadRides();
-}
-
-/* ===============================
-   AVAILABILITY
-================================ */
-function setAvail(v){
-  fetch(API+"/availability",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ driverId, isAvailable:v })
-  }).then(()=>{
-    onBtn.classList.toggle("hidden",v);
-    offBtn.classList.toggle("hidden",!v);
-  });
-}
-
-/* ===============================
-   LOAD RIDES
-================================ */
-function loadRides(){
-  fetch(API+"/my-rides",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ driverId })
-  })
-  .then(r=>r.json())
-  .then(list=>{
-    rides.innerHTML="";
-    if(!list.length){
-      rides.innerHTML="<div class='card'>No active rides</div>";
-    }
-    list.forEach(r=>{
-      rides.innerHTML+=`
-      <div class="card ride">
-        <b>${r.pickup}</b> → ${r.drop}<br>
-        Fare: ₹${r.fare}<br>
-        Payment: ${r.paymentMode?.toUpperCase() || "CASH"}<br>
-        <span class="status">Status: ${r.status}</span>
-
-        ${r.status==="assigned"?
-          `<button class="btn green" onclick="act('${r._id}','accept')">Accept Ride</button>`:""}
-
-        ${r.status==="accepted"?
-          `<button class="btn primary" onclick="act('${r._id}','complete')">Complete Ride</button>`:""}
-      </div>`;
-    });
-  });
-}
-
-/* ===============================
-   ACTIONS
-================================ */
-function act(id,type){
-  fetch(API+"/"+type,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ rideId:id, driverId })
-  }).then(()=>loadRides());
-}
-
-setInterval(loadRides,4000);
-
-const es = new EventSource("https://paliride.onrender.com/api/realtime/stream");
-
-es.addEventListener("ride_assigned", (e) => {
-  const data = JSON.parse(e.data);
-  if (data.driverId === driverId) {
-    alert("🔔 New Ride Assigned");
-    loadRides();
-  }
-});
-
-</script>
-
+<script src="driver.js"></script>
 </body>
 </html>
