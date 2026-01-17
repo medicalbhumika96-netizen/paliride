@@ -1,0 +1,67 @@
+*{box-sizing:border-box;font-family:system-ui}
+body{
+  margin:0;
+  background:#020617;
+  color:#fff;
+}
+header{
+  background:#0f172a;
+  padding:14px;
+  text-align:center;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  padding:12px;
+}
+.stat{
+  background:#111827;
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+}
+.stat span{
+  font-size:22px;
+  font-weight:700;
+}
+.stat small{opacity:.7}
+.red{background:#7f1d1d}
+.green{background:#064e3b}
+.blue{background:#1e3a8a}
+
+section{
+  padding:12px;
+}
+.card{
+  background:#111827;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:10px;
+}
+.card.red{
+  background:#991b1b;
+  border:2px solid #fecaca;
+  box-shadow:0 0 18px rgba(239,68,68,.6);
+}
+.badge{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+.status-requested{background:#334155}
+.status-assigned{background:#1d4ed8}
+.status-accepted{background:#16a34a}
+.status-completed{background:#475569}
+.sla{
+  font-weight:700;
+}
+.btn{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 12px;
+  background:#fff;
+  color:#000;
+  border-radius:10px;
+  text-decoration:none;
+}

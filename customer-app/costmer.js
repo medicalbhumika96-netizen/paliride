@@ -1,28 +1,39 @@
+/* =====================================
+   GLOBAL STATE
+===================================== */
+let rideType = "student";     // NEW (5 modes)
 let vehicle = "bike";
 let fare = 40;
 let paymentMode = "cash";
 let rideId = null;
 let pollTimer = null;
 
-// ⚠️ अभी testing के लिए रहने दो, बाद में backend shift करेंगे
+// ⚠️ Testing ke liye (later backend move)
 const MAPS_KEY = "PASTE_YOUR_GOOGLE_MAPS_KEY_HERE";
 
-/* ===============================
+/* =====================================
+   RIDE MODE (NEW)
+===================================== */
+function selectMode(type){
+  rideType = type;
+
+  document.querySelectorAll(".mode")
+    .forEach(m => m.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+
+  if(type === "emergency"){
+    alert("🚑 Emergency ride: nearest driver priority");
+  }
+}
+
+/* =====================================
    UI HELPERS
-================================ */
+===================================== */
 function setVehicle(v){
   vehicle = v;
   bike.classList.remove("active");
   auto.classList.remove("active");
   document.getElementById(v).classList.add("active");
-}
-
-function setFare(f){
-  fare = f;
-  document
-    .querySelectorAll(".fares button")
-    .forEach(b => b.classList.remove("active"));
-  event.target.classList.add("active");
 }
 
 function setPay(p){
@@ -32,60 +43,71 @@ function setPay(p){
   document.getElementById(p).classList.add("active");
 }
 
-/* ===============================
+/* =====================================
    BOOK RIDE
-================================ */
+===================================== */
 async function bookRide(){
-  if(!pickup.value || !drop.value){
-    return alert("Pickup & Drop required");
+  if(!pickup.value || !drop.value || !phone.value){
+    return alert("Name, Phone, Pickup & Drop required");
   }
 
   statusBox.style.display = "block";
   statusBox.innerHTML = "📍 Calculating distance...";
 
-  // 🔹 Google Distance Matrix
-  const url =
-    `https://maps.googleapis.com/maps/api/distancematrix/json` +
-    `?origins=${encodeURIComponent(pickup.value)}` +
-    `&destinations=${encodeURIComponent(drop.value)}` +
-    `&key=${MAPS_KEY}`;
+  /* -------- Distance Matrix -------- */
+  let distanceKm = null;
 
-  const res = await fetch(url);
-  const data = await res.json();
+  try{
+    const url =
+      `https://maps.googleapis.com/maps/api/distancematrix/json` +
+      `?origins=${encodeURIComponent(pickup.value)}` +
+      `&destinations=${encodeURIComponent(drop.value)}` +
+      `&key=${MAPS_KEY}`;
 
-  if(data.status !== "OK"){
-    return alert("Map error");
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data.status === "OK"){
+      const meters = data.rows[0].elements[0].distance.value;
+      distanceKm = (meters / 1000).toFixed(2);
+    }
+  }catch(e){
+    // silent fail (manual fallback)
   }
 
-  const meters = data.rows[0].elements[0].distance.value;
-  const distanceKm = (meters / 1000).toFixed(2);
-
   statusBox.innerHTML =
-    `📍 Distance: ${distanceKm} KM<br>💰 Calculating fare...`;
+    `📍 Distance: ${distanceKm || "—"} KM<br>
+     🔍 Creating ride...`;
 
+  /* -------- CREATE RIDE -------- */
   fetch("https://paliride.onrender.com/api/ride/create",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
+      customerName: name.value,
+      customerPhone: phone.value,
       pickup: pickup.value,
       drop: drop.value,
       vehicleType: vehicle,
       distanceKm,
-      paymentMode
+      paymentMode,
+      rideType          // 🔥 NEW
     })
   })
   .then(r=>r.json())
   .then(d=>{
     rideId = d.rideId;
     statusBox.innerHTML =
-      `💰 Fare: ₹${d.fare}<br>🔍 Searching for driver...`;
+      `🚕 Ride Mode: <b>${rideType.toUpperCase()}</b><br>
+       🔍 Searching nearby driver...`;
+
     pollTimer = setInterval(poll, 4000);
   });
 }
 
-/* ===============================
+/* =====================================
    POLLING (BACKUP)
-================================ */
+===================================== */
 function poll(){
   if(!rideId) return;
 
@@ -94,30 +116,36 @@ function poll(){
     .then(d => {
       if(!d) return;
 
-     statusBox.innerHTML = `
-  <b>🚕 Ride Status</b><br>
-  <span class="pill blue">${d.status}</span><br><br>
-  💰 Fare: ₹${d.fare}<br>
-  💳 Payment: ${d.paymentMode.toUpperCase()}<br>
-  📦 Payment Status: ${d.paymentStatus}
-`;
-            
+      statusBox.innerHTML = `
+        <b>🚕 Ride Status</b><br>
+        <span class="pill blue">${d.status}</span><br><br>
+
+        👤 Customer: ${name.value}<br>
+        📞 Phone: ${phone.value}<br>
+        💰 Fare: ₹${d.fare}<br>
+        💳 Payment: ${d.paymentMode.toUpperCase()}<br>
+        📦 Payment Status: ${d.paymentStatus}
+      `;
+
       if(d.status === "completed"){
         statusBox.innerHTML += "<br>✅ Ride completed";
         clearInterval(pollTimer);
       }
     })
-    .catch(() => {});
+    .catch(()=>{});
 }
 
-/* ===============================
+/* =====================================
    WHATSAPP BOOKING
-================================ */
+===================================== */
 function wa(){
   const msg =
 `Pali Ride Booking
+Name: ${name.value}
+Phone: ${phone.value}
 Pickup: ${pickup.value}
 Drop: ${drop.value}
+Mode: ${rideType.toUpperCase()}
 Vehicle: ${vehicle}
 Payment: ${paymentMode}`;
 
@@ -126,9 +154,9 @@ Payment: ${paymentMode}`;
   );
 }
 
-/* ===============================
+/* =====================================
    REALTIME (PRIMARY)
-================================ */
+===================================== */
 const es = new EventSource(
   "https://paliride.onrender.com/api/realtime/stream"
 );

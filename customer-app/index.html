@@ -4,48 +4,69 @@
 <meta charset="UTF-8">
 <title>Pali Ride</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link rel="stylesheet" href="costmer.css">
 </head>
 
 <body>
 
 <div class="app">
+
+  <!-- HEADER -->
   <div class="header">
-    <h2>🚕 Pali Ride</h2>
-    <span>Pali ka apna local ride</span>
+    <h1>Pali Ride</h1>
+    <p>Har zarurat ke liye ek hi ride</p>
   </div>
 
-  <input id="pickup" class="input" placeholder="Pickup location">
-  <input id="drop" class="input" placeholder="Drop location">
-
-  <div class="vehicle">
-    <button id="bike" class="active" onclick="setVehicle('bike')">🏍 Bike</button>
-    <button id="auto" onclick="setVehicle('auto')">🛺 Auto</button>
+  <!-- RIDE MODES -->
+  <div class="modes">
+    <div class="mode active" onclick="selectMode('student')">
+      🎓<span>Student</span>
+    </div>
+    <div class="mode" onclick="selectMode('office')">
+      🧑‍💼<span>Office</span>
+    </div>
+    <div class="mode emergency" onclick="selectMode('emergency')">
+      🚑<span>Emergency</span>
+    </div>
+    <div class="mode" onclick="selectMode('village')">
+      🌾<span>Village</span>
+    </div>
+    <div class="mode night" onclick="selectMode('night')">
+      🌙<span>Night</span>
+    </div>
   </div>
 
-  <div class="fares">
-    <button onclick="setFare(40)">₹40</button>
-    <button onclick="setFare(60)">₹60</button>
-    <button onclick="setFare(80)">₹80</button>
-    <button onclick="setFare(100)">₹100</button>
-    <button onclick="setFare(120)">₹120</button>
+  <!-- BOOKING CARD -->
+  <div class="card">
+
+    <input id="name" placeholder="Your name">
+    <input id="phone" placeholder="Mobile number">
+    <input id="pickup" placeholder="Pickup location">
+    <input id="drop" placeholder="Drop location">
+
+    <div class="vehicle">
+      <button id="bike" class="active" onclick="setVehicle('bike')">🏍 Bike</button>
+      <button id="auto" onclick="setVehicle('auto')">🛺 Auto</button>
+    </div>
+
+    <div class="payment">
+      <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
+      <button id="upi" onclick="setPay('upi')">📲 UPI</button>
+    </div>
+
+    <button class="primary" onclick="bookRide()">Confirm Ride</button>
+
+    <div id="statusBox"></div>
+
   </div>
 
-  <div class="vehicle">
-    <button id="cash" class="active" onclick="setPay('cash')">💵 Cash</button>
-    <button id="upi" onclick="setPay('upi')">📲 UPI</button>
+  <!-- TRUST FOOTER -->
+  <div class="trust">
+    ✔ Verified local drivers &nbsp;•&nbsp; ✔ Fixed fare &nbsp;•&nbsp; ✔ 24×7 support
   </div>
- 
 
-  <button class="primary" onclick="bookRide()">Confirm Ride</button>
-  <button class="primary whatsapp" onclick="wa()">📲 Book via WhatsApp</button>
-
-  <div id="statusBox" class="status-card hidden"></div>
-  
 </div>
 
 <script src="costmer.js"></script>
-
 </body>
 </html>

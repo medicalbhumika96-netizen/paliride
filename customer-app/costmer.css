@@ -1,88 +1,108 @@
 *{box-sizing:border-box;font-family:system-ui}
 body{
   margin:0;
-  height:100vh;
-  background:linear-gradient(135deg,#0a7cff,#4f46e5);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  background:linear-gradient(180deg,#020617,#0f172a);
+  color:#fff;
 }
 .app{
-  width:100%;
-  max-width:380px;
-  background:#fff;
-  border-radius:24px;
-  padding:22px;
-  box-shadow:0 20px 40px rgba(0,0,0,.25);
+  max-width:420px;
+  margin:auto;
+  padding:16px;
 }
-.header{text-align:center;margin-bottom:16px}
-.header h2{margin:0;font-size:22px}
-.header span{font-size:13px;color:#555}
+.header{
+  text-align:center;
+  margin-bottom:16px;
+}
+.header h1{
+  margin:0;
+  font-size:26px;
+}
+.header p{
+  margin:4px 0 0;
+  font-size:13px;
+  opacity:.85;
+}
 
-.input{
+.modes{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  margin-bottom:14px;
+}
+.mode{
+  min-width:74px;
+  background:#111827;
+  border-radius:16px;
+  padding:10px 6px;
+  text-align:center;
+  font-size:13px;
+  opacity:.6;
+  cursor:pointer;
+}
+.mode span{
+  display:block;
+  margin-top:4px;
+  font-size:11px;
+}
+.mode.active{
+  opacity:1;
+  background:#0a7cff;
+}
+.mode.emergency{
+  background:#7f1d1d;
+}
+.mode.night{
+  background:#1e293b;
+}
+
+.card{
+  background:#0f172a;
+  border-radius:20px;
+  padding:16px;
+  box-shadow:0 15px 35px rgba(0,0,0,.4);
+}
+input{
   width:100%;
   padding:14px;
   border-radius:14px;
-  border:1px solid #ddd;
-  margin-bottom:12px;
+  border:none;
+  margin-bottom:10px;
   font-size:15px;
 }
-
-.vehicle,.fares{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.vehicle button,.fares button{
+.vehicle,.payment{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+.vehicle button,.payment button{
   flex:1;
   padding:12px;
   border-radius:14px;
-  border:2px solid #ddd;
-  background:#fff;
-  font-weight:bold;
+  border:none;
+  background:#1e293b;
+  color:#fff;
 }
-button.active{
-  border-color:#0a7cff;
-  background:#eef5ff;
+.vehicle button.active,
+.payment button.active{
+  background:#0a7cff;
 }
-
 .primary{
   width:100%;
-  padding:14px;
+  padding:15px;
   border-radius:18px;
   border:none;
+  background:#22c55e;
+  color:#022c22;
   font-size:16px;
-  background:#0a7cff;
-  color:#fff;
-  margin-bottom:10px;
-}
-.whatsapp{background:#22c55e}
-
-#statusBox{
-  margin-top:12px;
-  padding:12px;
-  border-radius:14px;
-  background:#f3f4f6;
-  font-size:14px;
-}
-.status-card {
-  margin-top: 12px;
-  padding: 14px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
-  box-shadow: 0 10px 25px rgba(0,0,0,.12);
-  font-size: 14px;
-}
-.pill {
-  display:inline-block;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
   font-weight:600;
 }
-.blue { background:#dbeafe; color:#1e40af; }
-.green { background:#dcfce7; color:#166534; }
-.orange { background:#ffedd5; color:#9a3412; }
-
-button {
-  transition: all .15s ease;
+#statusBox{
+  margin-top:12px;
+  font-size:14px;
 }
-button:active {
-  transform: scale(.97);
+.trust{
+  text-align:center;
+  margin-top:14px;
+  font-size:11px;
+  opacity:.8;
 }

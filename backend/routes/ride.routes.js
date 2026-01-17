@@ -8,25 +8,43 @@ const router = express.Router();
 /* ===============================
    CREATE RIDE
 ================================ */
-router.post("/create", async (req, res) => {
-  try {
-    const { pickup, drop, vehicleType, distanceKm, paymentMode } = req.body;
-
-    const fare = calculateFare(vehicleType, distanceKm);
-
-    const ride = await Ride.create({
+router.post("/create", async (req,res)=>{
+  try{
+    const {
+      customerName,
+      customerPhone,
       pickup,
       drop,
       vehicleType,
       distanceKm,
-      fare,
       paymentMode,
-      status: "requested"
+      rideType
+    } = req.body;
+
+    // 🔥 PRIORITY LOGIC
+    let priority = 1;
+    if(rideType === "emergency") priority = 5;
+    if(rideType === "night") priority = 3;
+
+    const ride = await Ride.create({
+      customerName,
+      customerPhone,
+      pickup,
+      drop,
+      vehicleType,
+      distanceKm,
+      paymentMode,
+      rideType,
+      priority,
+      status:"requested"
     });
 
-    // auto assign
-    const driver = await Driver.findOne({ isAvailable: true });
-    if (driver) {
+    // 🔥 EMERGENCY-FIRST DRIVER ASSIGN
+    const driver = await Driver.findOne({
+      isAvailable:true
+    }).sort({ lastActive:-1 }); // nearest later
+
+    if(driver){
       ride.driver = driver._id;
       ride.status = "assigned";
       await ride.save();
@@ -37,15 +55,15 @@ router.post("/create", async (req, res) => {
 
     res.json({
       rideId: ride._id,
-      fare,
-      status: ride.status
+      status: ride.status,
+      priority: ride.priority
     });
 
-  } catch (err) {
+  }catch(err){
     res.status(500).json({ error: err.message });
   }
 });
-  
+
 
 /* ===============================
    GET RIDE STATUS (POLLING)

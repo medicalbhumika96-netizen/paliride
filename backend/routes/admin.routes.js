@@ -67,5 +67,14 @@ router.get("/collections", async (req, res) => {
   });
 });
 
+router.get("/emergency", async (req,res)=>{
+  const list = await Ride.find({
+    rideType:"emergency",
+    status:{ $ne:"completed" }
+  }).sort({ createdAt:-1 });
+
+  res.json(list);
+});
+
 
 export default router;
