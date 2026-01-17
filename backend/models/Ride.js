@@ -1,50 +1,33 @@
 import mongoose from "mongoose";
 
 const rideSchema = new mongoose.Schema({
-  customerName: String,
-  customerPhone: String,
-
   pickup: String,
   drop: String,
   vehicleType: String,
-
   distanceKm: Number,
+
   fare: Number,
 
-  rideType: {
-    type: String,
-    enum: ["student","office","emergency","village","night"],
-    default: "office"
-  },
-
-  priority: {
-    type: Number,
-    default: 1 // emergency = 5
-  },
-
-  status: {
-    type: String,
-    enum: ["requested","assigned","accepted","completed"],
-    default: "requested"
-  },
-
-  driver: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Driver"
-  },
-
-  paymentMode: {
-    type: String,
-    enum: ["cash","upi"],
-    default: "cash"
-  },
-
+  // PAYMENT
+  paymentMode: { type:String, enum:["cash","upi"], default:"cash" },
   paymentStatus: {
-    type: String,
-    enum: ["pending","collected"],
-    default: "pending"
-  }
+    type:String,
+    enum:["pending","requested","paid","collected"],
+    default:"pending"
+  },
 
+  // MONEY SPLIT
+  commission: Number,      // YOUR EARNING
+  driverEarning: Number,   // DRIVER EARNING
+
+  // DRIVER
+  driver:{ type:mongoose.Schema.Types.ObjectId, ref:"Driver" },
+
+  // RATING
+  rating:{ type:Number, min:1, max:5 },
+  penalty:{ type:Number, default:0 },
+
+  status:String
 },{ timestamps:true });
 
 export default mongoose.model("Ride", rideSchema);

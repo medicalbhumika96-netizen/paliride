@@ -5,11 +5,13 @@ import { calculateFare } from "../utils/fare.js";
 
 const router = express.Router();
 
+const COMMISSION_PERCENT = 15;
+
 /* ===============================
    CREATE RIDE
 ================================ */
-router.post("/create", async (req,res)=>{
-  try{
+router.post("/create", async (req, res) => {
+  try {
     const {
       customerName,
       customerPhone,
@@ -21,10 +23,17 @@ router.post("/create", async (req,res)=>{
       rideType
     } = req.body;
 
-    // 🔥 PRIORITY LOGIC
+    /* -------- PRIORITY -------- */
     let priority = 1;
-    if(rideType === "emergency") priority = 5;
-    if(rideType === "night") priority = 3;
+    if (rideType === "emergency") priority = 5;
+    if (rideType === "night") priority = 3;
+
+    /* -------- FARE -------- */
+    const fare = calculateFare(distanceKm, vehicleType);
+
+    /* -------- COMMISSION (STEP-B BASE) -------- */
+    const commission = Math.round(fare * COMMISSION_PERCENT / 100);
+    const driverEarning = fare - commission;
 
     const ride = await Ride.create({
       customerName,
@@ -33,18 +42,22 @@ router.post("/create", async (req,res)=>{
       drop,
       vehicleType,
       distanceKm,
+      fare,
+      commission,
+      driverEarning,
       paymentMode,
+      paymentStatus: "pending",   // STEP-B start
       rideType,
       priority,
-      status:"requested"
+      status: "requested"
     });
 
-    // 🔥 EMERGENCY-FIRST DRIVER ASSIGN
+    /* -------- AUTO ASSIGN DRIVER -------- */
     const driver = await Driver.findOne({
-      isAvailable:true
-    }).sort({ lastActive:-1 }); // nearest later
+      isAvailable: true
+    }).sort({ lastActive: -1 });
 
-    if(driver){
+    if (driver) {
       ride.driver = driver._id;
       ride.status = "assigned";
       await ride.save();
@@ -56,17 +69,19 @@ router.post("/create", async (req,res)=>{
     res.json({
       rideId: ride._id,
       status: ride.status,
-      priority: ride.priority
+      fare,
+      commission,
+      driverEarning,
+      paymentStatus: ride.paymentStatus
     });
 
-  }catch(err){
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-
 /* ===============================
-   GET RIDE STATUS (POLLING)
+   CUSTOMER – RIDE STATUS
 ================================ */
 router.get("/status/:id", async (req, res) => {
   try {
@@ -87,13 +102,45 @@ router.get("/status/:id", async (req, res) => {
       status: ride.status,
       fare: ride.fare,
       paymentMode: ride.paymentMode,
+      paymentStatus: ride.paymentStatus,
+      commission: ride.commission,        // STEP-B visibility
+      driverEarning: ride.driverEarning,  // STEP-B visibility
       driver: ride.driver || null
     });
 
   } catch (err) {
-    // 🔕 NEVER BREAK CUSTOMER UI
     res.json({ status: "searching" });
   }
+});
+
+/* ===============================
+   STEP-B: MARK UPI PAID (AUTO / MANUAL)
+================================ */
+router.post("/payment/upi-paid", async (req, res) => {
+  const { rideId } = req.body;
+
+  if (!rideId || rideId.length !== 24) {
+    return res.status(400).json({ message: "Invalid rideId" });
+  }
+
+  const ride = await Ride.findById(rideId);
+  if (!ride) {
+    return res.status(404).json({ message: "Ride not found" });
+  }
+
+  if (ride.paymentMode !== "upi") {
+    return res.status(400).json({ message: "Not a UPI ride" });
+  }
+
+  ride.paymentStatus = "paid";
+  await ride.save();
+
+  res.json({
+    message: "UPI payment marked as PAID",
+    fare: ride.fare,
+    commission: ride.commission,
+    driverEarning: ride.driverEarning
+  });
 });
 
 export default router;

@@ -11,6 +11,7 @@ const router = express.Router();
 ================================ */
 router.post("/login", async (req, res) => {
   const { name, phone, pin } = req.body;
+
   if (!phone || !pin) {
     return res.status(400).json({ message: "Phone & PIN required" });
   }
@@ -53,7 +54,7 @@ router.post("/availability", async (req, res) => {
 });
 
 /* ===============================
-   MY RIDES
+   MY RIDES (ACTIVE)
 ================================ */
 router.post("/my-rides", async (req, res) => {
   const { driverId } = req.body;
@@ -64,7 +65,7 @@ router.post("/my-rides", async (req, res) => {
 
   const rides = await Ride.find({
     driver: driverId,
-    status: { $in: ["assigned", "accepted"] }
+    status: { $in: ["assigned", "accepted", "completed"] }
   }).sort({ createdAt: -1 });
 
   res.json(rides);
@@ -88,12 +89,13 @@ router.post("/accept", async (req, res) => {
     return res.status(400).json({ message: "Ride not assignable" });
   }
 
-  await Ride.findByIdAndUpdate(rideId, { status: "accepted" });
+  ride.status = "accepted";
+  await ride.save();
 
-  // ✅ EMIT REALTIME EVENT (CORRECT PLACE)
+  // 🔔 realtime → customer
   broadcast("ride_accepted", {
-    rideId: rideId,
-    driverId: driverId
+    rideId,
+    driverId
   });
 
   res.json({ message: "Ride accepted" });
@@ -110,36 +112,108 @@ router.post("/complete", async (req, res) => {
   }
 
   const ride = await Ride.findById(rideId);
-  if (!ride) return res.status(404).json({ message: "Ride not found" });
+  if (!ride) {
+    return res.status(404).json({ message: "Ride not found" });
+  }
 
-  await Ride.findByIdAndUpdate(rideId, { status: "completed" });
+  ride.status = "completed";
+  await ride.save();
+
+  // driver free again
   await Driver.findByIdAndUpdate(ride.driver, { isAvailable: true });
 
-  // ✅ EMIT REALTIME EVENT
+  // 🔔 realtime → customer/admin
   broadcast("ride_completed", {
-    rideId: rideId
+    rideId
   });
 
-  res.json({ message: "Ride completed" });
+  res.json({
+    message: "Ride completed",
+    driverEarning: ride.driverEarning,
+    commission: ride.commission
+  });
 });
 
-/**
- * COLLECT PAYMENT
- * POST /api/driver/collect-payment
- * body: { rideId }
- */
-router.post("/collect-payment", async (req, res) => {
+/* ===============================
+   CASH COLLECTION
+================================ */
+router.post("/collect-cash", async (req, res) => {
   const { rideId } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(rideId)) {
     return res.status(400).json({ message: "Invalid rideId" });
   }
 
-  await Ride.findByIdAndUpdate(rideId, {
-    paymentStatus: "collected"
-  });
+  const ride = await Ride.findById(rideId);
+  if (!ride) {
+    return res.status(404).json({ message: "Ride not found" });
+  }
 
-  res.json({ message: "Payment marked as collected" });
+  if (ride.paymentMode !== "cash") {
+    return res.status(400).json({ message: "Not a cash ride" });
+  }
+
+  ride.paymentStatus = "collected";
+  await ride.save();
+
+  res.json({
+    message: "Cash collected successfully",
+    amount: ride.fare,
+    driverEarning: ride.driverEarning
+  });
+});
+
+/* ===============================
+   UPI REQUEST (QR FLOW)
+================================ */
+router.post("/request-upi", async (req, res) => {
+  const { rideId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(rideId)) {
+    return res.status(400).json({ message: "Invalid rideId" });
+  }
+
+  const ride = await Ride.findById(rideId);
+  if (!ride) {
+    return res.status(404).json({ message: "Ride not found" });
+  }
+
+  ride.paymentStatus = "requested";
+  await ride.save();
+
+  res.json({
+    message: "UPI request sent",
+    upiLink: "upi://pay?pa=YOURUPI@bank&pn=PaliRide"
+  });
+});
+
+/* ===============================
+   CONFIRM UPI (LOGICAL VERIFY)
+================================ */
+router.post("/confirm-upi", async (req, res) => {
+  const { rideId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(rideId)) {
+    return res.status(400).json({ message: "Invalid rideId" });
+  }
+
+  const ride = await Ride.findById(rideId);
+  if (!ride) {
+    return res.status(404).json({ message: "Ride not found" });
+  }
+
+  if (ride.paymentMode !== "upi") {
+    return res.status(400).json({ message: "Not a UPI ride" });
+  }
+
+  ride.paymentStatus = "paid";
+  await ride.save();
+
+  res.json({
+    message: "UPI payment confirmed",
+    driverEarning: ride.driverEarning,
+    commission: ride.commission
+  });
 });
 
 export default router;

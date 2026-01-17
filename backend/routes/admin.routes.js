@@ -6,10 +6,13 @@ import Driver from "../models/Driver.js";
 const router = express.Router();
 
 /* ===============================
-   GET ALL RIDES
+   GET ALL RIDES (ADMIN DASHBOARD)
 ================================ */
 router.get("/rides", async (req, res) => {
-  const rides = await Ride.find().sort({ createdAt: -1 });
+  const rides = await Ride.find()
+    .populate("driver", "name phone")
+    .sort({ createdAt: -1 });
+
   res.json(rides);
 });
 
@@ -17,12 +20,14 @@ router.get("/rides", async (req, res) => {
    GET ONLY ONLINE DRIVERS
 ================================ */
 router.get("/drivers", async (req, res) => {
-  const drivers = await Driver.find({ isAvailable: true }).select("-pin");
+  const drivers = await Driver.find({ isAvailable: true })
+    .select("name phone isAvailable");
+
   res.json(drivers);
 });
 
 /* ===============================
-   ASSIGN DRIVER (SAFE)
+   MANUAL DRIVER ASSIGN (SAFE)
 ================================ */
 router.post("/assign", async (req, res) => {
   const { rideId, driverId } = req.body;
@@ -44,37 +49,79 @@ router.post("/assign", async (req, res) => {
     return res.status(400).json({ message: "Ride not assignable" });
   }
 
-  await Ride.findByIdAndUpdate(rideId, {
-    driver: driverId,
-    status: "assigned"
-  });
+  ride.driver = driverId;
+  ride.status = "assigned";
+  await ride.save();
 
-  await Driver.findByIdAndUpdate(driverId, { isAvailable: false });
+  driver.isAvailable = false;
+  await driver.save();
 
   res.json({ message: "Driver assigned successfully" });
 });
-/**
- * TODAY COLLECTION
- */
+
+/* ===============================
+   TODAY COLLECTION (OWNER VIEW)
+================================ */
 router.get("/collections", async (req, res) => {
-  const total = await Ride.aggregate([
-    { $match: { paymentStatus: "collected" } },
-    { $group: { _id: null, sum: { $sum: "$fare" } } }
+  const data = await Ride.aggregate([
+    {
+      $match: {
+        paymentStatus: { $in: ["paid", "collected"] }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalFare: { $sum: "$fare" },
+        ownerEarning: { $sum: "$commission" },
+        driverPayout: { $sum: "$driverEarning" }
+      }
+    }
   ]);
 
   res.json({
-    total: total[0]?.sum || 0
+    totalFare: data[0]?.totalFare || 0,
+    ownerEarning: data[0]?.ownerEarning || 0,
+    driverPayout: data[0]?.driverPayout || 0
   });
 });
 
-router.get("/emergency", async (req,res)=>{
+/* ===============================
+   EMERGENCY MONITOR (CRITICAL)
+================================ */
+router.get("/emergency", async (req, res) => {
   const list = await Ride.find({
-    rideType:"emergency",
-    status:{ $ne:"completed" }
-  }).sort({ createdAt:-1 });
+    rideType: "emergency",
+    status: { $ne: "completed" }
+  })
+    .populate("driver", "name phone")
+    .sort({ priority: -1, createdAt: -1 });
 
   res.json(list);
 });
 
+/* ===============================
+   DRIVER PERFORMANCE (BONUS)
+================================ */
+router.get("/driver-performance", async (req, res) => {
+  const stats = await Ride.aggregate([
+    {
+      $match: {
+        status: "completed",
+        rating: { $exists: true }
+      }
+    },
+    {
+      $group: {
+        _id: "$driver",
+        avgRating: { $avg: "$rating" },
+        totalPenalty: { $sum: "$penalty" },
+        rides: { $sum: 1 }
+      }
+    }
+  ]);
+
+  res.json(stats);
+});
 
 export default router;
