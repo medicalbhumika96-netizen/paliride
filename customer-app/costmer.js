@@ -14,7 +14,7 @@ window.addEventListener("load", () => {
   setTimeout(() => {
     document.getElementById("splash")?.remove();
     document.getElementById("app")?.classList.remove("hidden");
-  }, 1800);
+  }, 1500);
 });
 
 /* ===============================
@@ -25,10 +25,6 @@ function selectMode(type) {
   document.querySelectorAll(".mode")
     .forEach(m => m.classList.remove("active"));
   event.currentTarget.classList.add("active");
-
-  if (type === "emergency") {
-    alert("🚑 Emergency ride: priority dispatch");
-  }
 }
 
 /* ===============================
@@ -52,7 +48,7 @@ function setPay(p) {
 }
 
 /* ===============================
-   BOOK RIDE
+   BOOK RIDE (FINAL FIX)
 ================================ */
 function bookRide() {
   const nameVal   = document.getElementById("name").value.trim();
@@ -77,10 +73,10 @@ function bookRide() {
       customerPhone: phoneVal,
       pickup: pickupVal,
       drop: dropVal,
-      vehicleType: vehicle,
-      paymentMode: paymentMode || "cash",
-      rideType: rideType,
-      distanceKm: 3   // ✅ GMAPS नहीं है → fixed safe value
+      vehicleType: vehicle || "bike",
+      paymentMode: paymentMode || "cash",   // 🔒 HARD FIX
+      rideType: rideType || "student",
+      distanceKm: 3                          // 🔒 SAFE DEFAULT (NO GMAPS)
     })
   })
   .then(res => {
@@ -88,6 +84,8 @@ function bookRide() {
     return res.json();
   })
   .then(d => {
+    if (!d.rideId) throw new Error("No rideId");
+
     rideId = d.rideId;
     statusBox.innerHTML = "🔍 Searching nearby driver...";
     pollTimer = setInterval(poll, 4000);
@@ -104,11 +102,11 @@ function bookRide() {
 function poll() {
   if (!rideId) return;
 
-  const statusBox = document.getElementById("statusBox");
-
   fetch(`https://paliride.onrender.com/api/ride/status/${rideId}`)
     .then(r => r.json())
     .then(d => {
+      if (!d.status) return;
+
       statusBox.innerHTML = `
         <b>Status:</b> ${d.status}<br>
         💰 Fare: ₹${d.fare ?? "--"}<br>
