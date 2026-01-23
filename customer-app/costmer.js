@@ -52,7 +52,7 @@ function setPay(p) {
 }
 
 /* ===============================
-   BOOK RIDE (FIXED)
+   BOOK RIDE
 ================================ */
 function bookRide() {
   const nameVal   = document.getElementById("name").value.trim();
@@ -78,13 +78,13 @@ function bookRide() {
       pickup: pickupVal,
       drop: dropVal,
       vehicleType: vehicle,
-      paymentMode: paymentMode || "cash", // ✅ HARD FIX
+      paymentMode: paymentMode || "cash",
       rideType: rideType,
-      distanceKm: 3 // ✅ SAFE DEFAULT (NO GMAPS)
+      distanceKm: 3   // ✅ GMAPS नहीं है → fixed safe value
     })
   })
   .then(res => {
-    if (!res.ok) throw new Error("Server error");
+    if (!res.ok) throw new Error("Backend error");
     return res.json();
   })
   .then(d => {
@@ -92,8 +92,9 @@ function bookRide() {
     statusBox.innerHTML = "🔍 Searching nearby driver...";
     pollTimer = setInterval(poll, 4000);
   })
-  .catch(() => {
-    statusBox.innerHTML = "❌ Ride failed (backend)";
+  .catch(err => {
+    console.error(err);
+    statusBox.innerHTML = "❌ Ride failed (backend error)";
   });
 }
 
@@ -103,14 +104,16 @@ function bookRide() {
 function poll() {
   if (!rideId) return;
 
+  const statusBox = document.getElementById("statusBox");
+
   fetch(`https://paliride.onrender.com/api/ride/status/${rideId}`)
     .then(r => r.json())
     .then(d => {
       statusBox.innerHTML = `
         <b>Status:</b> ${d.status}<br>
-        💰 Fare: ₹${d.fare}<br>
-        💳 Payment: ${d.paymentMode}<br>
-        📦 Payment Status: ${d.paymentStatus}
+        💰 Fare: ₹${d.fare ?? "--"}<br>
+        💳 Payment: ${d.paymentMode ?? "--"}<br>
+        📦 Payment Status: ${d.paymentStatus ?? "--"}
       `;
 
       if (d.status === "completed") {

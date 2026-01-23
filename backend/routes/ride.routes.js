@@ -5,6 +5,8 @@ import { calculateFare } from "../utils/fare.js";
 
 const router = express.Router();
 const COMMISSION_PERCENT = 15;
+const safeDistance = Number(distanceKm) || 3;
+const fare = calculateFare(safeDistance, vehicleType);
 
 /* ===============================
    CREATE RIDE (SAFE)
