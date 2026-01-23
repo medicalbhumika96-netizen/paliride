@@ -5,11 +5,9 @@ import { calculateFare } from "../utils/fare.js";
 
 const router = express.Router();
 const COMMISSION_PERCENT = 15;
-const safeDistance = Number(distanceKm) || 3;
-const fare = calculateFare(safeDistance, vehicleType);
 
 /* ===============================
-   CREATE RIDE (SAFE)
+   CREATE RIDE (RENDER SAFE)
 ================================ */
 router.post("/create", async (req, res) => {
   try {
@@ -24,43 +22,49 @@ router.post("/create", async (req, res) => {
       rideType
     } = req.body;
 
-    // ✅ FALLBACK (NO GMAPS)
-    if (!distanceKm || isNaN(distanceKm)) {
-      distanceKm = vehicleType === "auto" ? 4 : 3;
+    // ✅ BASIC VALIDATION
+    if (!customerName || !customerPhone || !pickup || !drop) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    /* PRIORITY */
+    // ✅ SAFE DISTANCE (NO GMAPS)
+    let safeDistance = Number(distanceKm);
+    if (!safeDistance || isNaN(safeDistance)) {
+      safeDistance = vehicleType === "auto" ? 4 : 3;
+    }
+
+    // ✅ PRIORITY
     let priority = 1;
     if (rideType === "emergency") priority = 5;
     if (rideType === "night") priority = 3;
 
-    /* FARE */
-    const fare = calculateFare(Number(distanceKm), vehicleType);
+    // ✅ FARE
+    const fare = calculateFare(safeDistance, vehicleType || "bike");
 
-    /* COMMISSION */
+    // ✅ COMMISSION
     const commission = Math.round((fare * COMMISSION_PERCENT) / 100);
     const driverEarning = fare - commission;
 
+    // ✅ CREATE RIDE
     const ride = await Ride.create({
       customerName,
       customerPhone,
       pickup,
       drop,
-      vehicleType,
-      distanceKm,
+      vehicleType: vehicleType || "bike",
+      distanceKm: safeDistance,
       fare,
       commission,
       driverEarning,
-      paymentMode,
+      paymentMode: paymentMode || "cash",
       paymentStatus: "pending",
-      rideType,
+      rideType: rideType || "student",
       priority,
       status: "requested"
     });
 
-    /* AUTO ASSIGN DRIVER */
+    // ✅ AUTO ASSIGN DRIVER
     const driver = await Driver.findOne({ isAvailable: true });
-
     if (driver) {
       ride.driver = driver._id;
       ride.status = "assigned";
