@@ -6,6 +6,7 @@ let vehicle = "bike";
 let paymentMode = "cash";
 let rideId = null;
 let pollTimer = null;
+let statusBox = null; // 🔒 GLOBAL FIX
 
 /* ===============================
    SPLASH → APP
@@ -48,14 +49,15 @@ function setPay(p) {
 }
 
 /* ===============================
-   BOOK RIDE (FINAL FIX)
+   BOOK RIDE
 ================================ */
 function bookRide() {
   const nameVal   = document.getElementById("name").value.trim();
   const phoneVal  = document.getElementById("phone").value.trim();
   const pickupVal = document.getElementById("pickup").value.trim();
   const dropVal   = document.getElementById("drop").value.trim();
-  const statusBox = document.getElementById("statusBox");
+
+  statusBox = document.getElementById("statusBox");
 
   if (!nameVal || !phoneVal || !pickupVal || !dropVal) {
     alert("All fields required");
@@ -74,9 +76,9 @@ function bookRide() {
       pickup: pickupVal,
       drop: dropVal,
       vehicleType: vehicle || "bike",
-      paymentMode: paymentMode || "cash",   // 🔒 HARD FIX
+      paymentMode: paymentMode || "cash",
       rideType: rideType || "student",
-      distanceKm: 3                          // 🔒 SAFE DEFAULT (NO GMAPS)
+      distanceKm: 3
     })
   })
   .then(res => {
@@ -88,21 +90,21 @@ function bookRide() {
 
     rideId = d.rideId;
     statusBox.innerHTML = "🔍 Searching nearby driver...";
-    pollTimer = setInterval(poll, 4000);
+    pollTimer = setInterval(poll, 4000); // 🔁 START POLLING
   })
   .catch(err => {
     console.error(err);
-    statusBox.innerHTML = "❌ Ride failed (backend error)";
+    statusBox.innerHTML = "❌ Ride failed";
   });
 }
 
 /* ===============================
-   POLL STATUS
+   POLL STATUS (FINAL FIX)
 ================================ */
 function poll() {
   if (!rideId) return;
 
-  fetch(`https://paliride.onrender.com/api/ride/status/${rideId}`)
+  fetch(`https://paliride.onrender.com/api/ride/${rideId}/status`) // ✅ CORRECT URL
     .then(r => r.json())
     .then(d => {
       if (!d.status) return;
@@ -110,12 +112,15 @@ function poll() {
       statusBox.innerHTML = `
         <b>Status:</b> ${d.status}<br>
         💰 Fare: ₹${d.fare ?? "--"}<br>
-        💳 Payment: ${d.paymentMode ?? "--"}<br>
         📦 Payment Status: ${d.paymentStatus ?? "--"}
       `;
 
       if (d.status === "completed") {
         clearInterval(pollTimer);
+        statusBox.innerHTML += `<br><br>✅ Ride completed successfully`;
       }
+    })
+    .catch(() => {
+      console.log("Status check failed");
     });
 }

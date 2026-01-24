@@ -1,13 +1,49 @@
-export function calculateFare(vehicle, km){
-  km = Number(km);
+// utils/fare.js
 
-  if(vehicle === "bike"){
-    return Math.max(30, Math.round(km * 12));
+export const calculateFare = (distanceKm, vehicleType) => {
+  /* ===============================
+     SAFE NUMBER CONVERSION
+  ================================ */
+  const distance = Number(distanceKm);
+
+  if (isNaN(distance) || distance <= 0) {
+    return 0;
   }
 
-  if(vehicle === "auto"){
-    return Math.max(50, Math.round(km * 18));
+  /* ===============================
+     VEHICLE RATES
+  ================================ */
+  const rates = {
+    bike: {
+      baseFare: 20,
+      perKm: 8
+    },
+    auto: {
+      baseFare: 30,
+      perKm: 12
+    },
+    cab: {
+      baseFare: 50,
+      perKm: 18
+    }
+  };
+
+  /* ===============================
+     SAFE VEHICLE TYPE
+  ================================ */
+  const vehicle = rates[vehicleType] || rates.bike;
+
+  /* ===============================
+     FARE CALCULATION
+  ================================ */
+  let fare = vehicle.baseFare + distance * vehicle.perKm;
+
+  /* ===============================
+     FINAL SAFETY
+  ================================ */
+  if (isNaN(fare) || fare <= 0) {
+    return 0;
   }
 
-  return Math.round(km * 15);
-}
+  return Number(fare.toFixed(2));
+};

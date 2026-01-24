@@ -33,8 +33,8 @@
   </div>
 
   <!-- INPUTS -->
-  <input id="name" placeholder="Your Name">
-  <input id="phone" placeholder="Mobile Number">
+  <input id="name" placeholder="Your Name" autocomplete="name">
+  <input id="phone" placeholder="Mobile Number" inputmode="numeric">
   <input id="pickup" placeholder="Pickup Location">
   <input id="drop" placeholder="Drop Location">
 
@@ -50,9 +50,14 @@
     <button id="upi" onclick="setPay('upi')">📲 UPI</button>
   </div>
 
+  <!-- ACTION -->
   <button class="primary" onclick="bookRide()">Confirm Ride</button>
 
-  <div id="statusBox" class="status hidden"></div>
+  <!-- STATUS BOX (IMPORTANT FIX) -->
+  <div id="statusBox" class="status hidden">
+    <h4 id="statusTitle">🚕 Ride Status</h4>
+    <div id="statusText">Waiting...</div>
+  </div>
 
 </div>
 
