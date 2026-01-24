@@ -7,7 +7,7 @@ const router = express.Router();
 const COMMISSION_PERCENT = 15;
 
 /* ===============================
-   CREATE RIDE (RENDER SAFE)
+   CREATE RIDE (ERROR FREE)
 ================================ */
 router.post("/create", async (req, res) => {
   try {
@@ -22,36 +22,80 @@ router.post("/create", async (req, res) => {
       rideType
     } = req.body;
 
-    // ✅ BASIC VALIDATION
+    /* ===============================
+       BASIC VALIDATION
+    ================================ */
     if (!customerName || !customerPhone || !pickup || !drop) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // ✅ SAFE DISTANCE (NO GMAPS)
+    /* ===============================
+       SAFE VEHICLE
+    ================================ */
+    vehicleType = vehicleType || "bike";
+
+    /* ===============================
+       SAFE DISTANCE
+    ================================ */
     let safeDistance = Number(distanceKm);
-    if (!safeDistance || isNaN(safeDistance)) {
+
+    if (isNaN(safeDistance) || safeDistance <= 0) {
       safeDistance = vehicleType === "auto" ? 4 : 3;
     }
 
-    // ✅ PRIORITY
+    /* ===============================
+       PRIORITY
+    ================================ */
     let priority = 1;
     if (rideType === "emergency") priority = 5;
-    if (rideType === "night") priority = 3;
+    else if (rideType === "night") priority = 3;
 
-    // ✅ FARE
-    const fare = calculateFare(safeDistance, vehicleType || "bike");
+    /* ===============================
+       FARE (100% SAFE)
+    ================================ */
+    let fare = calculateFare(safeDistance, vehicleType);
 
-    // ✅ COMMISSION
-    const commission = Math.round((fare * COMMISSION_PERCENT) / 100);
-    const driverEarning = fare - commission;
+    if (isNaN(fare) || fare <= 0) {
+      fare = 50; // absolute fallback (NEVER NaN)
+    }
 
-    // ✅ CREATE RIDE
+    fare = Number(fare.toFixed(2));
+
+    /* ===============================
+       COMMISSION & DRIVER EARNING
+    ================================ */
+    let commission = (fare * COMMISSION_PERCENT) / 100;
+    if (isNaN(commission)) commission = 0;
+
+    commission = Number(commission.toFixed(2));
+
+    let driverEarning = fare - commission;
+    if (isNaN(driverEarning) || driverEarning < 0) {
+      driverEarning = fare;
+    }
+
+    driverEarning = Number(driverEarning.toFixed(2));
+
+    /* ===============================
+       FINAL SAFETY CHECK
+    ================================ */
+    if (
+      isNaN(fare) ||
+      isNaN(commission) ||
+      isNaN(driverEarning)
+    ) {
+      return res.status(400).json({ error: "Invalid fare calculation" });
+    }
+
+    /* ===============================
+       CREATE RIDE
+    ================================ */
     const ride = await Ride.create({
       customerName,
       customerPhone,
       pickup,
       drop,
-      vehicleType: vehicleType || "bike",
+      vehicleType,
       distanceKm: safeDistance,
       fare,
       commission,
@@ -63,8 +107,11 @@ router.post("/create", async (req, res) => {
       status: "requested"
     });
 
-    // ✅ AUTO ASSIGN DRIVER
+    /* ===============================
+       AUTO ASSIGN DRIVER
+    ================================ */
     const driver = await Driver.findOne({ isAvailable: true });
+
     if (driver) {
       ride.driver = driver._id;
       ride.status = "assigned";
@@ -74,7 +121,10 @@ router.post("/create", async (req, res) => {
       await driver.save();
     }
 
-    res.json({
+    /* ===============================
+       RESPONSE
+    ================================ */
+    res.status(201).json({
       rideId: ride._id,
       status: ride.status,
       fare,
